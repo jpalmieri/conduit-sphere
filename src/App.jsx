@@ -8,7 +8,7 @@ function App() {
       <color attach="background" args={['#000000']} />
       <Environment preset="sunset" />
       <NoisySphere />
-      <OrbitControls enableDamping dampingFactor={0.05} />
+      <OrbitControls enableRotate={false} enablePan={false} enableZoom={true} />
     </Canvas>
   )
 }

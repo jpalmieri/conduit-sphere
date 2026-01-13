@@ -8,6 +8,8 @@ function NoisySphere() {
   const meshRef = useRef()
   const materialRef = useRef()
   const [materialKey, setMaterialKey] = useState(0)
+  const isDragging = useRef(false)
+  const previousMousePosition = useRef({ x: 0, y: 0 })
 
   const controls = useControls('Sphere', {
     preset: {
@@ -44,6 +46,27 @@ function NoisySphere() {
   useEffect(() => {
     setMaterialKey(k => k + 1)
   }, [controls.preset])
+
+  const handlePointerDown = (e) => {
+    isDragging.current = true
+    previousMousePosition.current = { x: e.clientX, y: e.clientY }
+  }
+
+  const handlePointerMove = (e) => {
+    if (!isDragging.current || !meshRef.current) return
+
+    const deltaX = e.clientX - previousMousePosition.current.x
+    const deltaY = e.clientY - previousMousePosition.current.y
+
+    meshRef.current.rotation.y += deltaX * 0.01
+    meshRef.current.rotation.x += deltaY * 0.01
+
+    previousMousePosition.current = { x: e.clientX, y: e.clientY }
+  }
+
+  const handlePointerUp = () => {
+    isDragging.current = false
+  }
 
   useFrame((state) => {
     if (materialRef.current?.userData?.shader) {
@@ -92,7 +115,13 @@ function NoisySphere() {
   }
 
   return (
-    <mesh ref={meshRef}>
+    <mesh
+      ref={meshRef}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+    >
       <sphereGeometry args={[1.5, 128, 128]} />
       <meshStandardMaterial
         key={materialKey}
