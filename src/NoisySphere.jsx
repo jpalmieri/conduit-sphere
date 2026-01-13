@@ -1,6 +1,7 @@
 import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
+import { useControls } from 'leva'
 
 const noiseShader = `
   // Simplex 3D Noise
@@ -74,27 +75,47 @@ function NoisySphere() {
   const meshRef = useRef()
   const materialRef = useRef()
 
+  const controls = useControls('Sphere', {
+    noiseStrength: { value: 0.3, min: 0, max: 1, step: 0.01, label: 'Noise Strength' },
+    noiseFrequency: { value: 1.5, min: 0.1, max: 5, step: 0.1, label: 'Noise Frequency' },
+    animationSpeed: { value: 0.3, min: 0, max: 2, step: 0.1, label: 'Animation Speed' },
+    color: { value: '#4a9eff', label: 'Color' },
+    metalness: { value: 0.6, min: 0, max: 1, step: 0.01, label: 'Metalness' },
+    roughness: { value: 0.2, min: 0, max: 1, step: 0.01, label: 'Roughness' },
+    envMapIntensity: { value: 1.3, min: 0, max: 3, step: 0.1, label: 'Environment' }
+  })
+
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
-      uNoiseStrength: { value: 0.3 }
+      uNoiseStrength: { value: controls.noiseStrength },
+      uNoiseFrequency: { value: controls.noiseFrequency },
+      uAnimationSpeed: { value: controls.animationSpeed }
     }),
     []
   )
 
   useFrame((state) => {
     if (materialRef.current?.userData?.shader) {
-      materialRef.current.userData.shader.uniforms.uTime.value = state.clock.elapsedTime
+      const shader = materialRef.current.userData.shader
+      shader.uniforms.uTime.value = state.clock.elapsedTime
+      shader.uniforms.uNoiseStrength.value = controls.noiseStrength
+      shader.uniforms.uNoiseFrequency.value = controls.noiseFrequency
+      shader.uniforms.uAnimationSpeed.value = controls.animationSpeed
     }
   })
 
   const onBeforeCompile = (shader) => {
     shader.uniforms.uTime = uniforms.uTime
     shader.uniforms.uNoiseStrength = uniforms.uNoiseStrength
+    shader.uniforms.uNoiseFrequency = uniforms.uNoiseFrequency
+    shader.uniforms.uAnimationSpeed = uniforms.uAnimationSpeed
 
     shader.vertexShader = `
       uniform float uTime;
       uniform float uNoiseStrength;
+      uniform float uNoiseFrequency;
+      uniform float uAnimationSpeed;
       ${noiseShader}
       ${shader.vertexShader}
     `
@@ -103,9 +124,9 @@ function NoisySphere() {
       '#include <begin_vertex>',
       `
       vec3 transformed = vec3(position);
-      float noiseFreq = 1.5;
+      float noiseFreq = uNoiseFrequency;
       float noiseAmp = uNoiseStrength;
-      vec3 noisePos = vec3(transformed.x * noiseFreq + uTime * 0.3, transformed.y * noiseFreq, transformed.z * noiseFreq);
+      vec3 noisePos = vec3(transformed.x * noiseFreq + uTime * uAnimationSpeed, transformed.y * noiseFreq, transformed.z * noiseFreq);
       transformed += normal * snoise(noisePos) * noiseAmp;
       `
     )
@@ -118,10 +139,10 @@ function NoisySphere() {
       <sphereGeometry args={[1.5, 128, 128]} />
       <meshStandardMaterial
         ref={materialRef}
-        color="#4a9eff"
-        metalness={0.6}
-        roughness={0.2}
-        envMapIntensity={1.3}
+        color={controls.color}
+        metalness={controls.metalness}
+        roughness={controls.roughness}
+        envMapIntensity={controls.envMapIntensity}
         onBeforeCompile={onBeforeCompile}
       />
     </mesh>
