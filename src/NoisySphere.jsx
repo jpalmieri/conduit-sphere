@@ -2,10 +2,7 @@ import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
-const vertexShader = `
-  uniform float uTime;
-  uniform float uNoiseStrength;
-
+const noiseShader = `
   // Simplex 3D Noise
   // https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
   vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
@@ -71,72 +68,61 @@ const vertexShader = `
     return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
                                 dot(p2,x2), dot(p3,x3) ) );
   }
-
-  varying vec3 vNormal;
-  varying vec3 vPosition;
-
-  void main() {
-    vNormal = normal;
-    vPosition = position;
-
-    vec3 pos = position;
-    float noiseFreq = 1.5;
-    float noiseAmp = uNoiseStrength;
-    vec3 noisePos = vec3(pos.x * noiseFreq + uTime * 0.3, pos.y * noiseFreq, pos.z * noiseFreq);
-    pos += normal * snoise(noisePos) * noiseAmp;
-
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-  }
-`
-
-const fragmentShader = `
-  uniform vec3 uColor;
-  uniform float uTime;
-
-  varying vec3 vNormal;
-  varying vec3 vPosition;
-
-  void main() {
-    vec3 color = uColor;
-
-    // Add some subtle color variation based on position
-    float colorShift = sin(vPosition.x * 2.0 + uTime * 0.5) * 0.1;
-    color += vec3(colorShift, colorShift * 0.5, colorShift * 0.8);
-
-    // Simple lighting
-    vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
-    float diff = max(dot(vNormal, lightDir), 0.0);
-    color = color * (0.5 + diff * 0.5);
-
-    gl_FragColor = vec4(color, 1.0);
-  }
 `
 
 function NoisySphere() {
   const meshRef = useRef()
+  const materialRef = useRef()
+
   const uniforms = useMemo(
     () => ({
       uTime: { value: 0 },
-      uNoiseStrength: { value: 0.3 },
-      uColor: { value: new THREE.Color('#4a9eff') }
+      uNoiseStrength: { value: 0.3 }
     }),
     []
   )
 
   useFrame((state) => {
-    if (meshRef.current) {
-      uniforms.uTime.value = state.clock.elapsedTime
+    if (materialRef.current?.userData?.shader) {
+      materialRef.current.userData.shader.uniforms.uTime.value = state.clock.elapsedTime
     }
   })
+
+  const onBeforeCompile = (shader) => {
+    shader.uniforms.uTime = uniforms.uTime
+    shader.uniforms.uNoiseStrength = uniforms.uNoiseStrength
+
+    shader.vertexShader = `
+      uniform float uTime;
+      uniform float uNoiseStrength;
+      ${noiseShader}
+      ${shader.vertexShader}
+    `
+
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <begin_vertex>',
+      `
+      vec3 transformed = vec3(position);
+      float noiseFreq = 1.5;
+      float noiseAmp = uNoiseStrength;
+      vec3 noisePos = vec3(transformed.x * noiseFreq + uTime * 0.3, transformed.y * noiseFreq, transformed.z * noiseFreq);
+      transformed += normal * snoise(noisePos) * noiseAmp;
+      `
+    )
+
+    materialRef.current.userData.shader = shader
+  }
 
   return (
     <mesh ref={meshRef}>
       <sphereGeometry args={[1.5, 128, 128]} />
-      <shaderMaterial
-        vertexShader={vertexShader}
-        fragmentShader={fragmentShader}
-        uniforms={uniforms}
-        wireframe={false}
+      <meshStandardMaterial
+        ref={materialRef}
+        color="#4a9eff"
+        metalness={0.6}
+        roughness={0.2}
+        envMapIntensity={1.3}
+        onBeforeCompile={onBeforeCompile}
       />
     </mesh>
   )
