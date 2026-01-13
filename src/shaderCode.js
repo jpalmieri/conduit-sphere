@@ -103,6 +103,14 @@ export const shaderPresets = {
     'float noise = snoise(noisePos + uTime * uAnimationSpeed * 0.5);',
     'pos += normal * noise * noiseAmp;'
   ].join('\n'),
+  traveling_waves: [
+    '// Create wave that travels from pole to pole without twist',
+    'float wave = mod(pos.y * noiseFreq * 3.0 + uTime * uAnimationSpeed * 2.0, 2.0);',
+    '// Triangle wave pattern',
+    'float displacement = 1.0 - abs(wave - 1.0);',
+    '',
+    'pos += normal * displacement * noiseAmp;'
+  ].join('\n'),
   bubbles: [
     'vec3 noisePos = pos * noiseFreq + uTime * uAnimationSpeed * 0.3;',
     'float noise = abs(snoise(noisePos)) * 0.5 + abs(snoise(noisePos * 2.0)) * 0.25 + abs(snoise(noisePos * 4.0)) * 0.125;',

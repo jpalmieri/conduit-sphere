@@ -17,6 +17,7 @@ function NoisySphere() {
       options: {
         'Classic': 'classic',
         'Twister': 'twister',
+        'Traveling Waves': 'traveling_waves',
         'Bubbles': 'bubbles',
         'Waves': 'waves',
         'Spiky': 'spiky',
