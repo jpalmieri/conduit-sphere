@@ -123,7 +123,7 @@ function NoisySphere() {
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
     >
-      <sphereGeometry args={[1.5, 128, 128]} />
+      <sphereGeometry args={[1.5, 512, 512]} />
       <meshStandardMaterial
         key={materialKey}
         ref={materialRef}
