@@ -137,6 +137,7 @@ function NoisySphere() {
     const varyingsCode = [
       needsWorldPosition ? 'varying vec3 vWorldPosition;' : '',
       'varying float vDistanceFromCenter;',
+      'varying vec3 vDisplacedNormal;',
       ''
     ].join('\n')
 
@@ -150,6 +151,7 @@ function NoisySphere() {
       'float noiseAmp = uNoiseStrength;',
       presetCode,
       'vec3 transformed = pos;',
+      '',
       'vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;',
       'vDistanceFromCenter = length(transformed);'
     ].join('\n')
@@ -157,6 +159,47 @@ function NoisySphere() {
     shader.vertexShader = shader.vertexShader.replace(
       '#include <begin_vertex>',
       transformCode
+    )
+
+    // Calculate displaced normal for fresnel without affecting material lighting
+    const displacedNormalCode = [
+      '// Calculate smoothed displaced normal for fresnel effects',
+      'vec3 displacedNormal = objectNormal;',
+      'if (uNoiseStrength > 0.0) {',
+      '  // Use larger offset and average multiple samples for smoother normals',
+      '  float offset = 0.05;',
+      '  vec3 avgNormal = vec3(0.0);',
+      '  ',
+      '  // Sample in multiple directions',
+      '  for(int i = 0; i < 6; i++) {',
+      '    vec3 sampleOffset = vec3(0.0);',
+      '    if(i == 0) sampleOffset = vec3(offset, 0.0, 0.0);',
+      '    else if(i == 1) sampleOffset = vec3(-offset, 0.0, 0.0);',
+      '    else if(i == 2) sampleOffset = vec3(0.0, offset, 0.0);',
+      '    else if(i == 3) sampleOffset = vec3(0.0, -offset, 0.0);',
+      '    else if(i == 4) sampleOffset = vec3(0.0, 0.0, offset);',
+      '    else sampleOffset = vec3(0.0, 0.0, -offset);',
+      '    ',
+      '    vec3 samplePos = position + sampleOffset;',
+      '    vec3 sampleNorm = normalize(samplePos);',
+      '    vec3 noisePos = vec3(samplePos.x * uNoiseFrequency + uTime * uAnimationSpeed, samplePos.y * uNoiseFrequency, samplePos.z * uNoiseFrequency);',
+      '    vec3 displaced = samplePos + sampleNorm * snoise(noisePos) * uNoiseStrength;',
+      '    avgNormal += displaced;',
+      '  }',
+      '  ',
+      '  avgNormal = avgNormal / 6.0;',
+      '  vec3 centerDisplaced = position + objectNormal * snoise(vec3(position.x * uNoiseFrequency + uTime * uAnimationSpeed, position.y * uNoiseFrequency, position.z * uNoiseFrequency)) * uNoiseStrength;',
+      '  displacedNormal = normalize(centerDisplaced - (avgNormal - position));',
+      '  ',
+      '  // Blend with original normal for stability',
+      '  displacedNormal = normalize(mix(objectNormal, displacedNormal, 0.7));',
+      '}',
+      'vDisplacedNormal = normalize((modelMatrix * vec4(displacedNormal, 0.0)).xyz);'
+    ].join('\n')
+
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <project_vertex>',
+      ['#include <project_vertex>', displacedNormalCode].join('\n')
     )
 
     // Fragment shader modifications (use same varyingsCode to avoid redefinition)

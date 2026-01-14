@@ -97,21 +97,24 @@ export const fragmentShaderPresets = {
   fresnel_rim: [
     '// Fresnel rim lighting',
     'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
-    'float fresnel = 1.0 - abs(dot(viewDirection, vNormal));',
+    'vec3 displacedNorm = normalize(vDisplacedNormal);',
+    'float fresnel = 1.0 - abs(dot(viewDirection, displacedNorm));',
     'fresnel = pow(fresnel, 3.0);',
     'diffuseColor.rgb = mix(diffuseColor.rgb, uFresnelColor, fresnel * uFresnelIntensity);'
   ].join('\n'),
   fresnel_glow: [
     '// Glowing Fresnel effect',
     'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
-    'float fresnel = 1.0 - abs(dot(viewDirection, vNormal));',
+    'vec3 displacedNorm = normalize(vDisplacedNormal);',
+    'float fresnel = 1.0 - abs(dot(viewDirection, displacedNorm));',
     'fresnel = pow(fresnel, 2.0);',
     'diffuseColor.rgb += uFresnelColor * fresnel * uFresnelIntensity * 1.5;'
   ].join('\n'),
   fresnel_animated: [
     '// Animated Fresnel rim',
     'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
-    'float fresnel = 1.0 - abs(dot(viewDirection, vNormal));',
+    'vec3 displacedNorm = normalize(vDisplacedNormal);',
+    'float fresnel = 1.0 - abs(dot(viewDirection, displacedNorm));',
     'fresnel = pow(fresnel, 3.0);',
     'float pulse = sin(uTime * 2.0) * 0.5 + 0.5;',
     'vec3 animatedColor = uFresnelColor * (0.8 + pulse * 0.4);',
@@ -120,7 +123,8 @@ export const fragmentShaderPresets = {
   iridescent: [
     '// Oil slick iridescence',
     'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
-    'float fresnel = 1.0 - abs(dot(viewDirection, vNormal));',
+    'vec3 displacedNorm = normalize(vDisplacedNormal);',
+    'float fresnel = 1.0 - abs(dot(viewDirection, displacedNorm));',
     'float iridescence = fresnel * 0.5 + snoise(vWorldPosition * 2.0) * 0.2;',
     'iridescence = fract(iridescence * 2.0 + uTime * 0.2);',
     'vec3 iridColor = vec3(',
@@ -133,7 +137,8 @@ export const fragmentShaderPresets = {
   holographic: [
     '// Holographic shimmer',
     'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
-    'float fresnel = 1.0 - abs(dot(viewDirection, vNormal));',
+    'vec3 displacedNorm = normalize(vDisplacedNormal);',
+    'float fresnel = 1.0 - abs(dot(viewDirection, displacedNorm));',
     'vec3 holoPos = vWorldPosition * 5.0 + uTime * 0.5;',
     'float holo = snoise(holoPos) * 0.3 + snoise(holoPos * 2.0) * 0.15;',
     'holo = fract((fresnel * 0.5 + holo) * 3.0);',
@@ -149,7 +154,8 @@ export const fragmentShaderPresets = {
   pearlescent: [
     '// Pearlescent/soap bubble effect',
     'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
-    'float fresnel = abs(dot(viewDirection, vNormal));',
+    'vec3 displacedNorm = normalize(vDisplacedNormal);',
+    'float fresnel = abs(dot(viewDirection, displacedNorm));',
     'fresnel = pow(1.0 - fresnel, 2.0);',
     'float shift = fresnel * 3.0 + snoise(vWorldPosition * 3.0) * 0.5;',
     'vec3 color1 = vec3(1.0, 0.7, 0.9);',
@@ -162,7 +168,8 @@ export const fragmentShaderPresets = {
   chromatic: [
     '// Chromatic aberration effect',
     'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
-    'float fresnel = 1.0 - abs(dot(viewDirection, vNormal));',
+    'vec3 displacedNorm = normalize(vDisplacedNormal);',
+    'float fresnel = 1.0 - abs(dot(viewDirection, displacedNorm));',
     'float offset = fresnel * 0.1 + snoise(vWorldPosition * 5.0 + uTime * 0.3) * 0.05;',
     'vec3 r = uFresnelColor * (1.0 + offset);',
     'vec3 g = uFresnelColor * (1.0);',
@@ -186,8 +193,9 @@ export const fragmentShaderPresets = {
   cavity: [
     '// Cavity/crevice darkening',
     'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
+    'vec3 displacedNorm = normalize(vDisplacedNormal);',
     'float cavity = abs(snoise(vWorldPosition * 2.0)) * 0.2 + 0.8;',
-    'float edge = 1.0 - abs(dot(viewDirection, vNormal));',
+    'float edge = 1.0 - abs(dot(viewDirection, displacedNorm));',
     'edge = pow(edge, 3.0);',
     'float darkening = mix(cavity, 1.0, edge);',
     'darkening = clamp(darkening, 0.7, 1.0);',
@@ -195,8 +203,9 @@ export const fragmentShaderPresets = {
   ].join('\n'),
   curvature: [
     '// Curvature-based shading',
+    'vec3 displacedNorm = normalize(vDisplacedNormal);',
     'vec3 p = vWorldPosition * 2.5;',
-    'float curve = abs(snoise(p + vNormal * 0.08) - snoise(p - vNormal * 0.08));',
+    'float curve = abs(snoise(p + displacedNorm * 0.08) - snoise(p - displacedNorm * 0.08));',
     'curve = curve * 0.2 + 0.9;',
     'curve = clamp(curve, 0.8, 1.1);',
     'diffuseColor.rgb *= mix(1.0, curve, uFresnelIntensity);'
