@@ -86,6 +86,14 @@ function NoisySphere() {
     iridescenceThickness: { value: urlValues.iridescenceThickness ?? 400, min: 0, max: 1000, step: 10, label: 'Iridescence Thick' }
   })
 
+  const glitchControls = useControls('Glitch Effects', {
+    glitchEnabled: { value: urlValues.glitchEnabled ?? false, label: 'Enable Glitch' },
+    glitchIntensity: { value: urlValues.glitchIntensity ?? 0.3, min: 0, max: 2, step: 0.01, label: 'Glitch Intensity' },
+    glitchFrequency: { value: urlValues.glitchFrequency ?? 10, min: 1, max: 50, step: 1, label: 'Glitch Grid Size' },
+    glitchSpeed: { value: urlValues.glitchSpeed ?? 1.0, min: 0, max: 5, step: 0.01, label: 'Glitch Speed' },
+    glitchRandomness: { value: urlValues.glitchRandomness ?? 0.5, min: 0, max: 1, step: 0.01, label: 'Randomness' }
+  })
+
   // Update URL when controls change
   useEffect(() => {
     const params = new URLSearchParams()
@@ -96,9 +104,15 @@ function NoisySphere() {
       }
     })
 
+    Object.entries(glitchControls).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        params.set(key, value)
+      }
+    })
+
     const newUrl = `${window.location.pathname}?${params.toString()}`
     window.history.replaceState({}, '', newUrl)
-  }, [controls])
+  }, [controls, glitchControls])
 
   const uniforms = useMemo(
     () => ({
@@ -107,7 +121,12 @@ function NoisySphere() {
       uNoiseFrequency: { value: controls.noiseFrequency },
       uAnimationSpeed: { value: controls.animationSpeed },
       uFresnelIntensity: { value: controls.fresnelIntensity },
-      uFresnelColor: { value: new THREE.Color(controls.fresnelColor) }
+      uFresnelColor: { value: new THREE.Color(controls.fresnelColor) },
+      uGlitchEnabled: { value: glitchControls.glitchEnabled ? 1.0 : 0.0 },
+      uGlitchIntensity: { value: glitchControls.glitchIntensity },
+      uGlitchFrequency: { value: glitchControls.glitchFrequency },
+      uGlitchSpeed: { value: glitchControls.glitchSpeed },
+      uGlitchRandomness: { value: glitchControls.glitchRandomness }
     }),
     []
   )
@@ -146,6 +165,11 @@ function NoisySphere() {
       shader.uniforms.uAnimationSpeed.value = controls.animationSpeed
       shader.uniforms.uFresnelIntensity.value = controls.fresnelIntensity
       shader.uniforms.uFresnelColor.value.set(controls.fresnelColor)
+      shader.uniforms.uGlitchEnabled.value = glitchControls.glitchEnabled ? 1.0 : 0.0
+      shader.uniforms.uGlitchIntensity.value = glitchControls.glitchIntensity
+      shader.uniforms.uGlitchFrequency.value = glitchControls.glitchFrequency
+      shader.uniforms.uGlitchSpeed.value = glitchControls.glitchSpeed
+      shader.uniforms.uGlitchRandomness.value = glitchControls.glitchRandomness
     }
   })
 
@@ -156,6 +180,11 @@ function NoisySphere() {
     shader.uniforms.uAnimationSpeed = uniforms.uAnimationSpeed
     shader.uniforms.uFresnelIntensity = uniforms.uFresnelIntensity
     shader.uniforms.uFresnelColor = uniforms.uFresnelColor
+    shader.uniforms.uGlitchEnabled = uniforms.uGlitchEnabled
+    shader.uniforms.uGlitchIntensity = uniforms.uGlitchIntensity
+    shader.uniforms.uGlitchFrequency = uniforms.uGlitchFrequency
+    shader.uniforms.uGlitchSpeed = uniforms.uGlitchSpeed
+    shader.uniforms.uGlitchRandomness = uniforms.uGlitchRandomness
 
     const uniformsCode = [
       'uniform float uTime;',
@@ -164,6 +193,11 @@ function NoisySphere() {
       'uniform float uAnimationSpeed;',
       'uniform float uFresnelIntensity;',
       'uniform vec3 uFresnelColor;',
+      'uniform float uGlitchEnabled;',
+      'uniform float uGlitchIntensity;',
+      'uniform float uGlitchFrequency;',
+      'uniform float uGlitchSpeed;',
+      'uniform float uGlitchRandomness;',
       ''
     ].join('\n')
 
@@ -185,6 +219,60 @@ function NoisySphere() {
       'float noiseFreq = uNoiseFrequency;',
       'float noiseAmp = uNoiseStrength;',
       presetCode,
+      '',
+      '// Apply glitch effect on top of existing displacement',
+      'if (uGlitchEnabled > 0.5) {',
+      '  // Quantize position into grid cells for rectilinear effect',
+      '  vec3 gridPos = floor(pos * uGlitchFrequency) / uGlitchFrequency;',
+      '  ',
+      '  // Generate pseudo-random values for each cell',
+      '  float cellHash = fract(sin(dot(gridPos, vec3(12.9898, 78.233, 45.164))) * 43758.5453);',
+      '  ',
+      '  // Calculate current and next glitch states',
+      '  float glitchTime = uTime * uGlitchSpeed * 2.0;',
+      '  float currentState = floor(glitchTime);',
+      '  float nextState = currentState + 1.0;',
+      '  float transition = fract(glitchTime); // 0 to 1 within each state',
+      '  ',
+      '  // Smooth the transition',
+      '  transition = smoothstep(0.0, 1.0, transition);',
+      '  ',
+      '  // Calculate current glitch offset',
+      '  float currentHash = fract(sin(currentState + cellHash * 100.0) * 43758.5453);',
+      '  float threshold = 1.0 - uGlitchRandomness;',
+      '  vec3 currentOffset = vec3(0.0);',
+      '  ',
+      '  if (currentHash > threshold) {',
+      '    float axisSelect = fract(cellHash * 7.0 + currentState);',
+      '    if (axisSelect < 0.33) {',
+      '      currentOffset.x = (fract(cellHash * 3.0 + currentState) - 0.5) * uGlitchIntensity;',
+      '    } else if (axisSelect < 0.66) {',
+      '      currentOffset.y = (fract(cellHash * 5.0 + currentState) - 0.5) * uGlitchIntensity;',
+      '    } else {',
+      '      currentOffset.z = (fract(cellHash * 11.0 + currentState) - 0.5) * uGlitchIntensity;',
+      '    }',
+      '  }',
+      '  ',
+      '  // Calculate next glitch offset',
+      '  float nextHash = fract(sin(nextState + cellHash * 100.0) * 43758.5453);',
+      '  vec3 nextOffset = vec3(0.0);',
+      '  ',
+      '  if (nextHash > threshold) {',
+      '    float axisSelect = fract(cellHash * 7.0 + nextState);',
+      '    if (axisSelect < 0.33) {',
+      '      nextOffset.x = (fract(cellHash * 3.0 + nextState) - 0.5) * uGlitchIntensity;',
+      '    } else if (axisSelect < 0.66) {',
+      '      nextOffset.y = (fract(cellHash * 5.0 + nextState) - 0.5) * uGlitchIntensity;',
+      '    } else {',
+      '      nextOffset.z = (fract(cellHash * 11.0 + nextState) - 0.5) * uGlitchIntensity;',
+      '    }',
+      '  }',
+      '  ',
+      '  // Interpolate between current and next offset',
+      '  vec3 glitchOffset = mix(currentOffset, nextOffset, transition);',
+      '  pos += glitchOffset;',
+      '}',
+      '',
       'vec3 transformed = pos;',
       '',
       'vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;',
