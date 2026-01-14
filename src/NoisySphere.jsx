@@ -35,7 +35,10 @@ function NoisySphere() {
         'Iridescent': 'iridescent',
         'Holographic': 'holographic',
         'Pearlescent': 'pearlescent',
-        'Chromatic': 'chromatic'
+        'Chromatic': 'chromatic',
+        'Ambient Occlusion': 'ambient_occlusion',
+        'Cavity': 'cavity',
+        'Curvature': 'curvature'
       },
       label: 'Surface Effect'
     },

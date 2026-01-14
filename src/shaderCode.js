@@ -169,6 +169,37 @@ export const fragmentShaderPresets = {
     'vec3 b = uFresnelColor * (1.0 - offset);',
     'vec3 chromatic = vec3(r.r, g.g, b.b);',
     'diffuseColor.rgb = mix(diffuseColor.rgb, chromatic, fresnel * uFresnelIntensity);'
+  ].join('\n'),
+  ambient_occlusion: [
+    '// Ambient occlusion based on surface curvature',
+    'float ao = 0.0;',
+    'vec3 samplePos = vWorldPosition * 1.5;',
+    'for(int i = 0; i < 4; i++) {',
+    '  float offset = float(i) * 0.15;',
+    '  ao += abs(snoise(samplePos + vNormal * offset));',
+    '}',
+    'ao = ao * 0.25;',
+    'ao = 1.0 - (ao * uFresnelIntensity * 0.5);',
+    'ao = clamp(ao, 0.5, 1.0);',
+    'diffuseColor.rgb *= ao;'
+  ].join('\n'),
+  cavity: [
+    '// Cavity/crevice darkening',
+    'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
+    'float cavity = abs(snoise(vWorldPosition * 2.0)) * 0.2 + 0.8;',
+    'float edge = 1.0 - abs(dot(viewDirection, vNormal));',
+    'edge = pow(edge, 3.0);',
+    'float darkening = mix(cavity, 1.0, edge);',
+    'darkening = clamp(darkening, 0.7, 1.0);',
+    'diffuseColor.rgb *= mix(1.0, darkening, uFresnelIntensity);'
+  ].join('\n'),
+  curvature: [
+    '// Curvature-based shading',
+    'vec3 p = vWorldPosition * 2.5;',
+    'float curve = abs(snoise(p + vNormal * 0.08) - snoise(p - vNormal * 0.08));',
+    'curve = curve * 0.2 + 0.9;',
+    'curve = clamp(curve, 0.8, 1.1);',
+    'diffuseColor.rgb *= mix(1.0, curve, uFresnelIntensity);'
   ].join('\n')
 }
 
