@@ -64,7 +64,7 @@ function NoisySphere() {
       },
       label: 'Surface Effect'
     },
-    fresnelIntensity: { value: urlValues.fresnelIntensity ?? 0.8, min: 0, max: 2, step: 0.01, label: 'Rim Intensity' },
+    fresnelIntensity: { value: urlValues.fresnelIntensity ?? 0.8, min: 0, max: 10, step: 0.01, label: 'Rim Intensity' },
     fresnelColor: { value: urlValues.fresnelColor || '#4db8ff', label: 'Rim Color' },
     noiseStrength: { value: urlValues.noiseStrength ?? 0.3, min: 0, max: 1, step: 0.01, label: 'Noise Strength' },
     noiseFrequency: { value: urlValues.noiseFrequency ?? 1.5, min: 0.1, max: 5, step: 0.1, label: 'Noise Frequency' },
