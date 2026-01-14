@@ -48,10 +48,12 @@ function NoisySphere() {
     noiseStrength: { value: 0.3, min: 0, max: 1, step: 0.01, label: 'Noise Strength' },
     noiseFrequency: { value: 1.5, min: 0.1, max: 5, step: 0.1, label: 'Noise Frequency' },
     animationSpeed: { value: 0.3, min: 0, max: 2, step: 0.1, label: 'Animation Speed' },
-    color: { value: '#4a9eff', label: 'Color' },
-    metalness: { value: 0.6, min: 0, max: 1, step: 0.01, label: 'Metalness' },
-    roughness: { value: 0.2, min: 0, max: 1, step: 0.01, label: 'Roughness' },
-    envMapIntensity: { value: 1.3, min: 0, max: 3, step: 0.1, label: 'Environment' }
+    color: { value: '#ff6b9d', label: 'Color' },
+    metalness: { value: 0.0, min: 0, max: 1, step: 0.01, label: 'Metalness' },
+    roughness: { value: 0.1, min: 0, max: 1, step: 0.01, label: 'Roughness' },
+    envMapIntensity: { value: 2.0, min: 0, max: 5, step: 0.1, label: 'Environment' },
+    clearcoat: { value: 1.0, min: 0, max: 1, step: 0.01, label: 'Clearcoat' },
+    clearcoatRoughness: { value: 0.0, min: 0, max: 1, step: 0.01, label: 'Clearcoat Rough' }
   })
 
   const uniforms = useMemo(
@@ -166,13 +168,15 @@ function NoisySphere() {
   return (
     <mesh ref={meshRef}>
       <sphereGeometry args={[1.5, 512, 512]} />
-      <meshStandardMaterial
+      <meshPhysicalMaterial
         key={materialKey}
         ref={materialRef}
         color={controls.color}
         metalness={controls.metalness}
         roughness={controls.roughness}
         envMapIntensity={controls.envMapIntensity}
+        clearcoat={controls.clearcoat}
+        clearcoatRoughness={controls.clearcoatRoughness}
         onBeforeCompile={onBeforeCompile}
       />
     </mesh>
