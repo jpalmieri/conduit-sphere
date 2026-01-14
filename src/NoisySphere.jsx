@@ -53,7 +53,16 @@ function NoisySphere() {
     roughness: { value: 0.1, min: 0, max: 1, step: 0.01, label: 'Roughness' },
     envMapIntensity: { value: 2.0, min: 0, max: 5, step: 0.1, label: 'Environment' },
     clearcoat: { value: 1.0, min: 0, max: 1, step: 0.01, label: 'Clearcoat' },
-    clearcoatRoughness: { value: 0.0, min: 0, max: 1, step: 0.01, label: 'Clearcoat Rough' }
+    clearcoatRoughness: { value: 0.0, min: 0, max: 1, step: 0.01, label: 'Clearcoat Rough' },
+    transmission: { value: 0.0, min: 0, max: 1, step: 0.01, label: 'Transmission' },
+    thickness: { value: 0.5, min: 0, max: 5, step: 0.1, label: 'Thickness' },
+    ior: { value: 1.5, min: 1, max: 2.5, step: 0.01, label: 'IOR' },
+    sheen: { value: 0.0, min: 0, max: 1, step: 0.01, label: 'Sheen' },
+    sheenRoughness: { value: 1.0, min: 0, max: 1, step: 0.01, label: 'Sheen Roughness' },
+    sheenColor: { value: '#ffffff', label: 'Sheen Color' },
+    iridescence: { value: 0.0, min: 0, max: 1, step: 0.01, label: 'Iridescence' },
+    iridescenceIOR: { value: 1.3, min: 1, max: 2.5, step: 0.01, label: 'Iridescence IOR' },
+    iridescenceThickness: { value: 400, min: 0, max: 1000, step: 10, label: 'Iridescence Thick' }
   })
 
   const uniforms = useMemo(
@@ -123,8 +132,10 @@ function NoisySphere() {
       ''
     ].join('\n')
 
+    // Only add vWorldPosition if transmission is disabled (Three.js adds it when transmission is enabled)
+    const needsWorldPosition = controls.transmission === 0
     const varyingsCode = [
-      'varying vec3 vWorldPosition;',
+      needsWorldPosition ? 'varying vec3 vWorldPosition;' : '',
       'varying float vDistanceFromCenter;',
       ''
     ].join('\n')
@@ -148,7 +159,7 @@ function NoisySphere() {
       transformCode
     )
 
-    // Fragment shader modifications
+    // Fragment shader modifications (use same varyingsCode to avoid redefinition)
     shader.fragmentShader = uniformsCode + varyingsCode + shaderFunctions + '\n' + shader.fragmentShader
 
     const fragmentPresetCode = fragmentShaderPresets[controls.fragmentPreset] || fragmentShaderPresets.default
@@ -177,6 +188,15 @@ function NoisySphere() {
         envMapIntensity={controls.envMapIntensity}
         clearcoat={controls.clearcoat}
         clearcoatRoughness={controls.clearcoatRoughness}
+        transmission={controls.transmission}
+        thickness={controls.thickness}
+        ior={controls.ior}
+        sheen={controls.sheen}
+        sheenRoughness={controls.sheenRoughness}
+        sheenColor={controls.sheenColor}
+        iridescence={controls.iridescence}
+        iridescenceIOR={controls.iridescenceIOR}
+        iridescenceThicknessRange={[0, controls.iridescenceThickness]}
         onBeforeCompile={onBeforeCompile}
       />
     </mesh>

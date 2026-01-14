@@ -5,7 +5,7 @@ import NoisySphere from './NoisySphere'
 function App() {
   return (
     <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
-      <Environment preset="studio" background />
+      <Environment preset="city" background />
       <NoisySphere />
       <OrbitControls enablePan={false} enableZoom={true} />
     </Canvas>
