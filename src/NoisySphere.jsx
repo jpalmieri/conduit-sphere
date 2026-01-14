@@ -31,9 +31,13 @@ function NoisySphere() {
         'Default': 'default',
         'Fresnel Rim': 'fresnel_rim',
         'Fresnel Glow': 'fresnel_glow',
-        'Animated Fresnel': 'fresnel_animated'
+        'Animated Fresnel': 'fresnel_animated',
+        'Iridescent': 'iridescent',
+        'Holographic': 'holographic',
+        'Pearlescent': 'pearlescent',
+        'Chromatic': 'chromatic'
       },
-      label: 'Rim Light'
+      label: 'Surface Effect'
     },
     fresnelIntensity: { value: 0.8, min: 0, max: 2, step: 0.01, label: 'Rim Intensity' },
     fresnelColor: { value: '#4db8ff', label: 'Rim Color' },
@@ -137,7 +141,7 @@ function NoisySphere() {
     )
 
     // Fragment shader modifications
-    shader.fragmentShader = uniformsCode + varyingsCode + shader.fragmentShader
+    shader.fragmentShader = uniformsCode + varyingsCode + shaderFunctions + '\n' + shader.fragmentShader
 
     const fragmentPresetCode = fragmentShaderPresets[controls.fragmentPreset] || fragmentShaderPresets.default
 

@@ -116,6 +116,59 @@ export const fragmentShaderPresets = {
     'float pulse = sin(uTime * 2.0) * 0.5 + 0.5;',
     'vec3 animatedColor = uFresnelColor * (0.8 + pulse * 0.4);',
     'diffuseColor.rgb = mix(diffuseColor.rgb, animatedColor, fresnel * uFresnelIntensity);'
+  ].join('\n'),
+  iridescent: [
+    '// Oil slick iridescence',
+    'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
+    'float fresnel = 1.0 - abs(dot(viewDirection, vNormal));',
+    'float iridescence = fresnel * 0.5 + snoise(vWorldPosition * 2.0) * 0.2;',
+    'iridescence = fract(iridescence * 2.0 + uTime * 0.2);',
+    'vec3 iridColor = vec3(',
+    '  sin(iridescence * 6.28318) * 0.3 + 0.7,',
+    '  sin(iridescence * 6.28318 + 2.0944) * 0.3 + 0.7,',
+    '  sin(iridescence * 6.28318 + 4.18879) * 0.3 + 0.7',
+    ');',
+    'diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * iridColor, uFresnelIntensity * 0.6);'
+  ].join('\n'),
+  holographic: [
+    '// Holographic shimmer',
+    'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
+    'float fresnel = 1.0 - abs(dot(viewDirection, vNormal));',
+    'vec3 holoPos = vWorldPosition * 5.0 + uTime * 0.5;',
+    'float holo = snoise(holoPos) * 0.3 + snoise(holoPos * 2.0) * 0.15;',
+    'holo = fract((fresnel * 0.5 + holo) * 3.0);',
+    'vec3 rainbow = vec3(',
+    '  abs(holo * 6.0 - 3.0) - 1.0,',
+    '  2.0 - abs(holo * 6.0 - 2.0),',
+    '  2.0 - abs(holo * 6.0 - 4.0)',
+    ');',
+    'rainbow = clamp(rainbow, 0.0, 1.0);',
+    'rainbow = rainbow * 0.4 + 0.6;',
+    'diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * rainbow, uFresnelIntensity * 0.5);'
+  ].join('\n'),
+  pearlescent: [
+    '// Pearlescent/soap bubble effect',
+    'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
+    'float fresnel = abs(dot(viewDirection, vNormal));',
+    'fresnel = pow(1.0 - fresnel, 2.0);',
+    'float shift = fresnel * 3.0 + snoise(vWorldPosition * 3.0) * 0.5;',
+    'vec3 color1 = vec3(1.0, 0.7, 0.9);',
+    'vec3 color2 = vec3(0.6, 0.9, 1.0);',
+    'vec3 color3 = vec3(0.9, 1.0, 0.7);',
+    'vec3 pearlColor = mix(color1, color2, fract(shift));',
+    'pearlColor = mix(pearlColor, color3, fract(shift + 0.33));',
+    'diffuseColor.rgb = mix(diffuseColor.rgb, pearlColor, fresnel * uFresnelIntensity);'
+  ].join('\n'),
+  chromatic: [
+    '// Chromatic aberration effect',
+    'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
+    'float fresnel = 1.0 - abs(dot(viewDirection, vNormal));',
+    'float offset = fresnel * 0.1 + snoise(vWorldPosition * 5.0 + uTime * 0.3) * 0.05;',
+    'vec3 r = uFresnelColor * (1.0 + offset);',
+    'vec3 g = uFresnelColor * (1.0);',
+    'vec3 b = uFresnelColor * (1.0 - offset);',
+    'vec3 chromatic = vec3(r.r, g.g, b.b);',
+    'diffuseColor.rgb = mix(diffuseColor.rgb, chromatic, fresnel * uFresnelIntensity);'
   ].join('\n')
 }
 
