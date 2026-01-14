@@ -35,6 +35,8 @@ function NoisySphere() {
       },
       label: 'Rim Light'
     },
+    fresnelIntensity: { value: 0.8, min: 0, max: 2, step: 0.01, label: 'Rim Intensity' },
+    fresnelColor: { value: '#4db8ff', label: 'Rim Color' },
     noiseStrength: { value: 0.3, min: 0, max: 1, step: 0.01, label: 'Noise Strength' },
     noiseFrequency: { value: 1.5, min: 0.1, max: 5, step: 0.1, label: 'Noise Frequency' },
     animationSpeed: { value: 0.3, min: 0, max: 2, step: 0.1, label: 'Animation Speed' },
@@ -49,7 +51,9 @@ function NoisySphere() {
       uTime: { value: 0 },
       uNoiseStrength: { value: controls.noiseStrength },
       uNoiseFrequency: { value: controls.noiseFrequency },
-      uAnimationSpeed: { value: controls.animationSpeed }
+      uAnimationSpeed: { value: controls.animationSpeed },
+      uFresnelIntensity: { value: controls.fresnelIntensity },
+      uFresnelColor: { value: new THREE.Color(controls.fresnelColor) }
     }),
     []
   )
@@ -86,6 +90,8 @@ function NoisySphere() {
       shader.uniforms.uNoiseStrength.value = controls.noiseStrength
       shader.uniforms.uNoiseFrequency.value = controls.noiseFrequency
       shader.uniforms.uAnimationSpeed.value = controls.animationSpeed
+      shader.uniforms.uFresnelIntensity.value = controls.fresnelIntensity
+      shader.uniforms.uFresnelColor.value.set(controls.fresnelColor)
     }
   })
 
@@ -94,12 +100,16 @@ function NoisySphere() {
     shader.uniforms.uNoiseStrength = uniforms.uNoiseStrength
     shader.uniforms.uNoiseFrequency = uniforms.uNoiseFrequency
     shader.uniforms.uAnimationSpeed = uniforms.uAnimationSpeed
+    shader.uniforms.uFresnelIntensity = uniforms.uFresnelIntensity
+    shader.uniforms.uFresnelColor = uniforms.uFresnelColor
 
     const uniformsCode = [
       'uniform float uTime;',
       'uniform float uNoiseStrength;',
       'uniform float uNoiseFrequency;',
       'uniform float uAnimationSpeed;',
+      'uniform float uFresnelIntensity;',
+      'uniform vec3 uFresnelColor;',
       ''
     ].join('\n')
 
