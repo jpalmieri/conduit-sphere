@@ -88,7 +88,7 @@ function NoisySphere() {
 
   const glitchControls = useControls('Glitch Effects', {
     glitchEnabled: { value: urlValues.glitchEnabled ?? false, label: 'Enable Glitch' },
-    glitchIntensity: { value: urlValues.glitchIntensity ?? 0.3, min: 0, max: 2, step: 0.01, label: 'Glitch Intensity' },
+    glitchIntensity: { value: urlValues.glitchIntensity ?? 0.3, min: 0, max: 5, step: 0.01, label: 'Glitch Intensity' },
     glitchFrequency: { value: urlValues.glitchFrequency ?? 10, min: 1, max: 50, step: 1, label: 'Glitch Grid Size' },
     glitchSpeed: { value: urlValues.glitchSpeed ?? 1.0, min: 0, max: 5, step: 0.01, label: 'Glitch Speed' },
     glitchRandomness: { value: urlValues.glitchRandomness ?? 0.5, min: 0, max: 1, step: 0.01, label: 'Randomness' }
