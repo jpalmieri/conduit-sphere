@@ -11,9 +11,30 @@ function NoisySphere() {
   const isDragging = useRef(false)
   const previousMousePosition = useRef({ x: 0, y: 0 })
 
+  // Read initial values from URL params
+  const getInitialValues = () => {
+    const params = new URLSearchParams(window.location.search)
+    const values = {}
+
+    for (const [key, value] of params.entries()) {
+      // Parse the value based on type
+      if (value === 'true' || value === 'false') {
+        values[key] = value === 'true'
+      } else if (!isNaN(value) && value !== '') {
+        values[key] = parseFloat(value)
+      } else {
+        values[key] = value
+      }
+    }
+
+    return values
+  }
+
+  const urlValues = useMemo(() => getInitialValues(), [])
+
   const controls = useControls('Sphere', {
     preset: {
-      value: 'classic',
+      value: urlValues.preset || 'classic',
       options: {
         'Classic': 'classic',
         'Twister': 'twister',
@@ -26,7 +47,7 @@ function NoisySphere() {
       label: 'Preset'
     },
     fragmentPreset: {
-      value: 'default',
+      value: urlValues.fragmentPreset || 'default',
       options: {
         'Default': 'default',
         'Fresnel Rim': 'fresnel_rim',
@@ -43,27 +64,41 @@ function NoisySphere() {
       },
       label: 'Surface Effect'
     },
-    fresnelIntensity: { value: 0.8, min: 0, max: 2, step: 0.01, label: 'Rim Intensity' },
-    fresnelColor: { value: '#4db8ff', label: 'Rim Color' },
-    noiseStrength: { value: 0.3, min: 0, max: 1, step: 0.01, label: 'Noise Strength' },
-    noiseFrequency: { value: 1.5, min: 0.1, max: 5, step: 0.1, label: 'Noise Frequency' },
-    animationSpeed: { value: 0.3, min: 0, max: 2, step: 0.1, label: 'Animation Speed' },
-    color: { value: '#ff6b9d', label: 'Color' },
-    metalness: { value: 0.0, min: 0, max: 1, step: 0.01, label: 'Metalness' },
-    roughness: { value: 0.1, min: 0, max: 1, step: 0.01, label: 'Roughness' },
-    envMapIntensity: { value: 2.0, min: 0, max: 5, step: 0.1, label: 'Environment' },
-    clearcoat: { value: 1.0, min: 0, max: 1, step: 0.01, label: 'Clearcoat' },
-    clearcoatRoughness: { value: 0.0, min: 0, max: 1, step: 0.01, label: 'Clearcoat Rough' },
-    transmission: { value: 0.0, min: 0, max: 1, step: 0.01, label: 'Transmission' },
-    thickness: { value: 0.5, min: 0, max: 5, step: 0.1, label: 'Thickness' },
-    ior: { value: 1.5, min: 1, max: 2.5, step: 0.01, label: 'IOR' },
-    sheen: { value: 0.0, min: 0, max: 1, step: 0.01, label: 'Sheen' },
-    sheenRoughness: { value: 1.0, min: 0, max: 1, step: 0.01, label: 'Sheen Roughness' },
-    sheenColor: { value: '#ffffff', label: 'Sheen Color' },
-    iridescence: { value: 0.0, min: 0, max: 1, step: 0.01, label: 'Iridescence' },
-    iridescenceIOR: { value: 1.3, min: 1, max: 2.5, step: 0.01, label: 'Iridescence IOR' },
-    iridescenceThickness: { value: 400, min: 0, max: 1000, step: 10, label: 'Iridescence Thick' }
+    fresnelIntensity: { value: urlValues.fresnelIntensity ?? 0.8, min: 0, max: 2, step: 0.01, label: 'Rim Intensity' },
+    fresnelColor: { value: urlValues.fresnelColor || '#4db8ff', label: 'Rim Color' },
+    noiseStrength: { value: urlValues.noiseStrength ?? 0.3, min: 0, max: 1, step: 0.01, label: 'Noise Strength' },
+    noiseFrequency: { value: urlValues.noiseFrequency ?? 1.5, min: 0.1, max: 5, step: 0.1, label: 'Noise Frequency' },
+    animationSpeed: { value: urlValues.animationSpeed ?? 0.3, min: 0, max: 2, step: 0.1, label: 'Animation Speed' },
+    color: { value: urlValues.color || '#ff6b9d', label: 'Color' },
+    metalness: { value: urlValues.metalness ?? 0.0, min: 0, max: 1, step: 0.01, label: 'Metalness' },
+    roughness: { value: urlValues.roughness ?? 0.1, min: 0, max: 1, step: 0.01, label: 'Roughness' },
+    envMapIntensity: { value: urlValues.envMapIntensity ?? 2.0, min: 0, max: 5, step: 0.1, label: 'Environment' },
+    clearcoat: { value: urlValues.clearcoat ?? 1.0, min: 0, max: 1, step: 0.01, label: 'Clearcoat' },
+    clearcoatRoughness: { value: urlValues.clearcoatRoughness ?? 0.0, min: 0, max: 1, step: 0.01, label: 'Clearcoat Rough' },
+    transmission: { value: urlValues.transmission ?? 0.0, min: 0, max: 1, step: 0.01, label: 'Transmission' },
+    thickness: { value: urlValues.thickness ?? 0.5, min: 0, max: 5, step: 0.1, label: 'Thickness' },
+    ior: { value: urlValues.ior ?? 1.5, min: 1, max: 2.5, step: 0.01, label: 'IOR' },
+    sheen: { value: urlValues.sheen ?? 0.0, min: 0, max: 1, step: 0.01, label: 'Sheen' },
+    sheenRoughness: { value: urlValues.sheenRoughness ?? 1.0, min: 0, max: 1, step: 0.01, label: 'Sheen Roughness' },
+    sheenColor: { value: urlValues.sheenColor || '#ffffff', label: 'Sheen Color' },
+    iridescence: { value: urlValues.iridescence ?? 0.0, min: 0, max: 1, step: 0.01, label: 'Iridescence' },
+    iridescenceIOR: { value: urlValues.iridescenceIOR ?? 1.3, min: 1, max: 2.5, step: 0.01, label: 'Iridescence IOR' },
+    iridescenceThickness: { value: urlValues.iridescenceThickness ?? 400, min: 0, max: 1000, step: 10, label: 'Iridescence Thick' }
   })
+
+  // Update URL when controls change
+  useEffect(() => {
+    const params = new URLSearchParams()
+
+    Object.entries(controls).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        params.set(key, value)
+      }
+    })
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`
+    window.history.replaceState({}, '', newUrl)
+  }, [controls])
 
   const uniforms = useMemo(
     () => ({
