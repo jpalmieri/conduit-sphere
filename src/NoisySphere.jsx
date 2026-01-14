@@ -2,7 +2,7 @@ import { useRef, useMemo, useState, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useControls } from 'leva'
-import { shaderFunctions, shaderPresets } from './shaderCode'
+import { shaderFunctions, shaderPresets, fragmentShaderPresets } from './shaderCode'
 
 function NoisySphere() {
   const meshRef = useRef()
@@ -25,6 +25,16 @@ function NoisySphere() {
       },
       label: 'Preset'
     },
+    fragmentPreset: {
+      value: 'default',
+      options: {
+        'Default': 'default',
+        'Fresnel Rim': 'fresnel_rim',
+        'Fresnel Glow': 'fresnel_glow',
+        'Animated Fresnel': 'fresnel_animated'
+      },
+      label: 'Rim Light'
+    },
     noiseStrength: { value: 0.3, min: 0, max: 1, step: 0.01, label: 'Noise Strength' },
     noiseFrequency: { value: 1.5, min: 0.1, max: 5, step: 0.1, label: 'Noise Frequency' },
     animationSpeed: { value: 0.3, min: 0, max: 2, step: 0.1, label: 'Animation Speed' },
@@ -46,7 +56,7 @@ function NoisySphere() {
 
   useEffect(() => {
     setMaterialKey(k => k + 1)
-  }, [controls.preset])
+  }, [controls.preset, controls.fragmentPreset])
 
   const handlePointerDown = (e) => {
     isDragging.current = true
@@ -93,7 +103,12 @@ function NoisySphere() {
       ''
     ].join('\n')
 
-    shader.vertexShader = uniformsCode + shaderFunctions + '\n' + shader.vertexShader
+    const varyingsCode = [
+      'varying vec3 vWorldPosition;',
+      ''
+    ].join('\n')
+
+    shader.vertexShader = uniformsCode + varyingsCode + shaderFunctions + '\n' + shader.vertexShader
 
     const presetCode = shaderPresets[controls.preset] || shaderPresets.classic
 
@@ -102,13 +117,26 @@ function NoisySphere() {
       'float noiseFreq = uNoiseFrequency;',
       'float noiseAmp = uNoiseStrength;',
       presetCode,
-      'vec3 transformed = pos;'
+      'vec3 transformed = pos;',
+      'vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;'
     ].join('\n')
 
     shader.vertexShader = shader.vertexShader.replace(
       '#include <begin_vertex>',
       transformCode
     )
+
+    // Fragment shader modifications
+    shader.fragmentShader = uniformsCode + varyingsCode + shader.fragmentShader
+
+    const fragmentPresetCode = fragmentShaderPresets[controls.fragmentPreset] || fragmentShaderPresets.default
+
+    if (fragmentPresetCode.trim()) {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <color_fragment>',
+        ['#include <color_fragment>', fragmentPresetCode].join('\n')
+      )
+    }
 
     if (materialRef.current) {
       materialRef.current.userData.shader = shader

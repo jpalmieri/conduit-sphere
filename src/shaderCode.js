@@ -89,6 +89,38 @@ export const shaderFunctions = [
   ''
 ].join('\n')
 
+export const fragmentShaderPresets = {
+  default: [
+    '// Use the base material color',
+    ''
+  ].join('\n'),
+  fresnel_rim: [
+    '// Fresnel rim lighting',
+    'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
+    'float fresnel = 1.0 - abs(dot(viewDirection, vNormal));',
+    'fresnel = pow(fresnel, 3.0);',
+    'vec3 rimColor = vec3(0.3, 0.6, 1.0);',
+    'diffuseColor.rgb = mix(diffuseColor.rgb, rimColor, fresnel * 0.8);'
+  ].join('\n'),
+  fresnel_glow: [
+    '// Glowing Fresnel effect',
+    'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
+    'float fresnel = 1.0 - abs(dot(viewDirection, vNormal));',
+    'fresnel = pow(fresnel, 2.0);',
+    'vec3 glowColor = vec3(0.2, 1.0, 0.8);',
+    'diffuseColor.rgb += glowColor * fresnel * 1.5;'
+  ].join('\n'),
+  fresnel_animated: [
+    '// Animated Fresnel rim',
+    'vec3 viewDirection = normalize(cameraPosition - vWorldPosition);',
+    'float fresnel = 1.0 - abs(dot(viewDirection, vNormal));',
+    'fresnel = pow(fresnel, 3.0);',
+    'float pulse = sin(uTime * 2.0) * 0.5 + 0.5;',
+    'vec3 rimColor = vec3(0.5 + pulse * 0.5, 0.3, 1.0);',
+    'diffuseColor.rgb = mix(diffuseColor.rgb, rimColor, fresnel * (0.6 + pulse * 0.4));'
+  ].join('\n')
+}
+
 export const shaderPresets = {
   classic: [
     'vec3 noisePos = vec3(pos.x * noiseFreq + uTime * uAnimationSpeed, pos.y * noiseFreq, pos.z * noiseFreq);',
