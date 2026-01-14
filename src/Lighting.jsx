@@ -1,11 +1,32 @@
+import { useEffect, useMemo } from 'react'
 import { useControls } from 'leva'
 import { Environment } from '@react-three/drei'
 
 function Lighting() {
+  // Read initial values from URL params
+  const getInitialValues = () => {
+    const params = new URLSearchParams(window.location.search)
+    const values = {}
+
+    for (const [key, value] of params.entries()) {
+      if (value === 'true' || value === 'false') {
+        values[key] = value === 'true'
+      } else if (!isNaN(value) && value !== '') {
+        values[key] = parseFloat(value)
+      } else {
+        values[key] = value
+      }
+    }
+
+    return values
+  }
+
+  const urlValues = useMemo(() => getInitialValues(), [])
+
   const lightingControls = useControls('Lighting', {
-    environmentEnabled: { value: true, label: 'Environment' },
+    environmentEnabled: { value: urlValues.environmentEnabled ?? true, label: 'Environment' },
     environmentPreset: {
-      value: 'city',
+      value: urlValues.environmentPreset || 'dawn',
       options: {
         'City': 'city',
         'Sunset': 'sunset',
@@ -20,12 +41,26 @@ function Lighting() {
       },
       label: 'Preset'
     },
-    showBackground: { value: true, label: 'Show Background' },
-    ambientLightEnabled: { value: false, label: 'Ambient Light' },
-    ambientIntensity: { value: 0.5, min: 0, max: 2, step: 0.1, label: 'Ambient Intensity' },
-    directionalLightEnabled: { value: false, label: 'Directional Light' },
-    directionalIntensity: { value: 1.0, min: 0, max: 3, step: 0.1, label: 'Directional Intensity' }
+    showBackground: { value: urlValues.showBackground ?? true, label: 'Show Background' },
+    ambientLightEnabled: { value: urlValues.ambientLightEnabled ?? false, label: 'Ambient Light' },
+    ambientIntensity: { value: urlValues.ambientIntensity ?? 0.5, min: 0, max: 2, step: 0.1, label: 'Ambient Intensity' },
+    directionalLightEnabled: { value: urlValues.directionalLightEnabled ?? false, label: 'Directional Light' },
+    directionalIntensity: { value: urlValues.directionalIntensity ?? 1.0, min: 0, max: 3, step: 0.1, label: 'Directional Intensity' }
   })
+
+  // Update URL when lighting controls change
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+
+    Object.entries(lightingControls).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        params.set(key, value)
+      }
+    })
+
+    const newUrl = `${window.location.pathname}?${params.toString()}`
+    window.history.replaceState({}, '', newUrl)
+  }, [lightingControls])
 
   return (
     <>
