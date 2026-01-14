@@ -1,12 +1,13 @@
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Environment } from '@react-three/drei'
+import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Bloom, Vignette } from '@react-three/postprocessing'
 import NoisySphere from './NoisySphere'
+import Lighting from './Lighting'
 
 function App() {
   return (
     <Canvas camera={{ position: [0, 0, 5], fov: 50 }}>
-      <Environment preset="city" background />
+      <Lighting />
       <NoisySphere />
       <OrbitControls enablePan={false} enableZoom={true} />
       <EffectComposer>
