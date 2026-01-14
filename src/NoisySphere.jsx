@@ -38,7 +38,8 @@ function NoisySphere() {
         'Chromatic': 'chromatic',
         'Ambient Occlusion': 'ambient_occlusion',
         'Cavity': 'cavity',
-        'Curvature': 'curvature'
+        'Curvature': 'curvature',
+        'Displacement Peaks': 'displacement_peaks'
       },
       label: 'Surface Effect'
     },
@@ -122,6 +123,7 @@ function NoisySphere() {
 
     const varyingsCode = [
       'varying vec3 vWorldPosition;',
+      'varying float vDistanceFromCenter;',
       ''
     ].join('\n')
 
@@ -135,7 +137,8 @@ function NoisySphere() {
       'float noiseAmp = uNoiseStrength;',
       presetCode,
       'vec3 transformed = pos;',
-      'vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;'
+      'vWorldPosition = (modelMatrix * vec4(transformed, 1.0)).xyz;',
+      'vDistanceFromCenter = length(transformed);'
     ].join('\n')
 
     shader.vertexShader = shader.vertexShader.replace(

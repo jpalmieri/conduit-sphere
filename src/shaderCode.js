@@ -200,6 +200,13 @@ export const fragmentShaderPresets = {
     'curve = curve * 0.2 + 0.9;',
     'curve = clamp(curve, 0.8, 1.1);',
     'diffuseColor.rgb *= mix(1.0, curve, uFresnelIntensity);'
+  ].join('\n'),
+  displacement_peaks: [
+    '// Highlight extreme displacement points',
+    'float threshold = 1.5 + uFresnelIntensity * 0.3;',
+    'float dist = vDistanceFromCenter;',
+    'float highlight = smoothstep(threshold - 0.1, threshold + 0.1, dist);',
+    'diffuseColor.rgb = mix(diffuseColor.rgb, uFresnelColor, highlight);'
   ].join('\n')
 }
 
