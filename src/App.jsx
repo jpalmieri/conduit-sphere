@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useMemo } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Bloom, Vignette } from '@react-three/postprocessing'
@@ -90,6 +90,12 @@ function App() {
   const [isZoomAdjusted, setIsZoomAdjusted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
+  // Check for hideMenu URL parameter
+  const hideMenu = useMemo(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.has('hideMenu')
+  }, [])
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768)
@@ -126,6 +132,13 @@ function App() {
 
   return (
     <>
+      {hideMenu && (
+        <style>{`
+          .leva-c-kWgxhW {
+            display: none !important;
+          }
+        `}</style>
+      )}
       <div style={canvasStyle}>
         <Canvas camera={{ position: cameraPosition, fov: 50 }}>
           <CameraAnimation orbitControlsRef={orbitControlsRef} />
@@ -144,7 +157,7 @@ function App() {
           </EffectComposer>
         </Canvas>
       </div>
-      <ControlsDrawer isOpen={isDrawerOpen} onToggle={handleDrawerToggle} isMobile={isMobile} />
+      {!hideMenu && <ControlsDrawer isOpen={isDrawerOpen} onToggle={handleDrawerToggle} isMobile={isMobile} />}
     </>
   )
 }
