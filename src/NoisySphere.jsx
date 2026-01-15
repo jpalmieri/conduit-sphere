@@ -96,7 +96,7 @@ function NoisySphere() {
 
   // Update URL when controls change
   useEffect(() => {
-    const params = new URLSearchParams()
+    const params = new URLSearchParams(window.location.search)
 
     Object.entries(controls).forEach(([key, value]) => {
       if (value !== null && value !== undefined) {
