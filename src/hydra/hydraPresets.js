@@ -34,6 +34,27 @@ export const hydraPresets = {
   plasma: {
     name: 'Plasma',
     code: `osc(10, 0.1, 0.8).color(1, 0.5, 0.2).mult(osc(20, 0.2, 1).rotate(0.5)).out()`
+  },
+  // Sphere-aware presets using custom functions
+  polarRings: {
+    name: '[Sphere] Polar Rings',
+    code: `osc(20, 0.1, 1.5).polar().out()`
+  },
+  equirectNoise: {
+    name: '[Sphere] Equirect Noise',
+    code: `noise(5, 0.2).equirect().out()`
+  },
+  mirroredPattern: {
+    name: '[Sphere] Mirrored',
+    code: `osc(10, 0.1, 1.5).modulate(noise(3), 0.3).mirror().out()`
+  },
+  sphereWarpOsc: {
+    name: '[Sphere] Warped',
+    code: `osc(8, 0.1, 1.2).sphereWarp(0.5).out()`
+  },
+  tiledVoronoi: {
+    name: '[Sphere] Tiled Voronoi',
+    code: `voronoi(8, 0.3, 0.3).tile(2, 1).out()`
   }
 }
 
