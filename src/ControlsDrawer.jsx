@@ -1,4 +1,36 @@
+import { useEffect } from 'react'
+
 function ControlsDrawer({ isOpen, setIsOpen, isMobile }) {
+  // Disable page zoom when drawer is open on mobile
+  useEffect(() => {
+    if (!isMobile) return
+
+    const viewport = document.querySelector('meta[name="viewport"]')
+
+    if (isOpen) {
+      // Disable pinch zoom when drawer is open
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no')
+      }
+      // Also prevent touch gestures on body
+      document.body.style.touchAction = 'pan-y'
+    } else {
+      // Re-enable pinch zoom when drawer is closed
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0')
+      }
+      document.body.style.touchAction = 'auto'
+    }
+
+    return () => {
+      // Cleanup: restore defaults
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0')
+      }
+      document.body.style.touchAction = 'auto'
+    }
+  }, [isOpen, isMobile])
+
   if (!isMobile) {
     // On desktop, don't modify Leva's default behavior
     return null
