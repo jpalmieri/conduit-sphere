@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-function ControlsDrawer({ isOpen, setIsOpen, isMobile }) {
+function ControlsDrawer({ isOpen, onToggle, isMobile }) {
   // Disable page zoom when drawer is open on mobile
   useEffect(() => {
     if (!isMobile) return
@@ -40,7 +40,7 @@ function ControlsDrawer({ isOpen, setIsOpen, isMobile }) {
     <>
       {/* Toggle button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => onToggle(!isOpen)}
         style={{
           position: 'fixed',
           bottom: isOpen ? 'calc(60vh - 40px)' : '20px',

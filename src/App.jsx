@@ -1,16 +1,24 @@
 import { useRef, useState, useEffect } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Bloom, Vignette } from '@react-three/postprocessing'
 import NoisySphere from './NoisySphere'
 import Lighting from './Lighting'
 import CameraAnimation from './CameraAnimation'
 import ControlsDrawer from './ControlsDrawer'
+import * as THREE from 'three'
 
 function CameraAdjuster({ isDrawerOpen, isMobile, orbitControlsRef }) {
   const { camera } = useThree()
   const savedDistanceRef = useRef(null)
   const previousDrawerStateRef = useRef(isDrawerOpen)
+  const animationRef = useRef({
+    isAnimating: false,
+    startDistance: 0,
+    targetDistance: 0,
+    startTime: 0,
+    duration: 250 // Smooth 250ms animation
+  })
 
   useEffect(() => {
     if (!isMobile || !orbitControlsRef.current) return
@@ -18,7 +26,6 @@ function CameraAdjuster({ isDrawerOpen, isMobile, orbitControlsRef }) {
     const controls = orbitControlsRef.current
     const currentOffset = camera.position.clone().sub(controls.target)
     const currentDistance = currentOffset.length()
-    const direction = currentOffset.normalize()
 
     // Detect drawer state change
     const drawerJustOpened = !previousDrawerStateRef.current && isDrawerOpen
@@ -27,16 +34,51 @@ function CameraAdjuster({ isDrawerOpen, isMobile, orbitControlsRef }) {
     if (drawerJustOpened) {
       // Save the current distance when drawer opens
       savedDistanceRef.current = currentDistance
-      // Zoom in
-      const targetDistance = savedDistanceRef.current * 0.6
-      camera.position.copy(controls.target).add(direction.multiplyScalar(targetDistance))
+      // Start animation to zoom in
+      animationRef.current = {
+        isAnimating: true,
+        startDistance: currentDistance,
+        targetDistance: savedDistanceRef.current * 0.6,
+        startTime: performance.now(),
+        duration: 250
+      }
     } else if (drawerJustClosed && savedDistanceRef.current !== null) {
-      // Restore to the exact saved distance when drawer closes
-      camera.position.copy(controls.target).add(direction.multiplyScalar(savedDistanceRef.current))
+      // Start animation to restore to the exact saved distance
+      animationRef.current = {
+        isAnimating: true,
+        startDistance: currentDistance,
+        targetDistance: savedDistanceRef.current,
+        startTime: performance.now(),
+        duration: 250
+      }
     }
 
     previousDrawerStateRef.current = isDrawerOpen
   }, [isDrawerOpen, isMobile, camera, orbitControlsRef])
+
+  useFrame(() => {
+    if (!isMobile || !orbitControlsRef.current || !animationRef.current.isAnimating) return
+
+    const controls = orbitControlsRef.current
+    const anim = animationRef.current
+    const elapsed = performance.now() - anim.startTime
+    const progress = Math.min(elapsed / anim.duration, 1)
+
+    // Smooth ease-out cubic easing
+    const eased = 1 - Math.pow(1 - progress, 3)
+
+    // Interpolate distance
+    const newDistance = THREE.MathUtils.lerp(anim.startDistance, anim.targetDistance, eased)
+
+    // Update camera position
+    const currentOffset = camera.position.clone().sub(controls.target)
+    const direction = currentOffset.normalize()
+    camera.position.copy(controls.target).add(direction.multiplyScalar(newDistance))
+
+    if (progress >= 1) {
+      anim.isAnimating = false
+    }
+  })
 
   return null
 }
@@ -44,6 +86,8 @@ function CameraAdjuster({ isDrawerOpen, isMobile, orbitControlsRef }) {
 function App() {
   const orbitControlsRef = useRef()
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [isViewAdjusted, setIsViewAdjusted] = useState(false)
+  const [isZoomAdjusted, setIsZoomAdjusted] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -57,9 +101,23 @@ function App() {
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  const handleDrawerToggle = (newOpenState) => {
+    if (newOpenState) {
+      // Opening: drawer opens first, then height adjusts, then zoom
+      setIsDrawerOpen(true)
+      setTimeout(() => setIsViewAdjusted(true), 50)
+      setTimeout(() => setIsZoomAdjusted(true), 350) // 50ms + 300ms transition
+    } else {
+      // Closing: height adjusts first, then drawer closes, then zoom
+      setIsViewAdjusted(false)
+      setTimeout(() => setIsDrawerOpen(false), 300)
+      setTimeout(() => setIsZoomAdjusted(false), 600) // 300ms + 300ms transition
+    }
+  }
+
   const canvasStyle = {
     width: '100vw',
-    height: isMobile && isDrawerOpen ? '40vh' : '100vh',
+    height: isMobile && isViewAdjusted ? '40vh' : '100vh',
     transition: 'height 0.3s ease'
   }
 
@@ -73,7 +131,7 @@ function App() {
           <Lighting />
           <NoisySphere />
           <CameraAnimation orbitControlsRef={orbitControlsRef} />
-          <CameraAdjuster isDrawerOpen={isDrawerOpen} isMobile={isMobile} orbitControlsRef={orbitControlsRef} />
+          <CameraAdjuster isDrawerOpen={isZoomAdjusted} isMobile={isMobile} orbitControlsRef={orbitControlsRef} />
           <OrbitControls
             ref={orbitControlsRef}
             enablePan={false}
@@ -86,7 +144,7 @@ function App() {
           </EffectComposer>
         </Canvas>
       </div>
-      <ControlsDrawer isOpen={isDrawerOpen} setIsOpen={setIsDrawerOpen} isMobile={isMobile} />
+      <ControlsDrawer isOpen={isDrawerOpen} onToggle={handleDrawerToggle} isMobile={isMobile} />
     </>
   )
 }
