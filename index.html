@@ -27,6 +27,10 @@
 </head>
 <body>
   <div id="root"></div>
+  <script>
+    // Polyfill for Node.js globals used by hydra-synth
+    window.global = window;
+  </script>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
