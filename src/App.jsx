@@ -128,9 +128,9 @@ function App() {
     <>
       <div style={canvasStyle}>
         <Canvas camera={{ position: cameraPosition, fov: 50 }}>
-          <Lighting />
-          <NoisySphere />
           <CameraAnimation orbitControlsRef={orbitControlsRef} />
+          <NoisySphere />
+          <Lighting />
           <CameraAdjuster isDrawerOpen={isZoomAdjusted} isMobile={isMobile} orbitControlsRef={orbitControlsRef} />
           <OrbitControls
             ref={orbitControlsRef}
