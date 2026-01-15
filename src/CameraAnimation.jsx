@@ -24,11 +24,13 @@ function CameraAnimation({ orbitControlsRef }) {
   const urlValues = useMemo(() => getInitialValues(), [])
 
   const cameraControls = useControls('Camera Animation', {
-    cameraAnimEnabled: { value: urlValues.cameraAnimEnabled ?? false, label: 'Enable Animation' },
-    cameraSpeedX: { value: urlValues.cameraSpeedX ?? 0.1, min: -2, max: 2, step: 0.01, label: 'Speed X (Horizontal)' },
-    cameraSpeedY: { value: urlValues.cameraSpeedY ?? 0.0, min: -2, max: 2, step: 0.01, label: 'Speed Y (Vertical)' },
-    cameraSpeedZ: { value: urlValues.cameraSpeedZ ?? 0.0, min: -2, max: 2, step: 0.01, label: 'Speed Z (Zoom)' }
+    cameraAnimEnabled: { value: urlValues.cameraAnimEnabled ?? false, label: 'Rotate' },
+    cameraSpeedX: { value: urlValues.cameraSpeedX ?? 0.1, min: -2, max: 2, step: 0.01, label: 'Speed' }
   })
+
+  // Set Y and Z speeds to 0 since we removed those controls
+  const cameraSpeedY = 0.0
+  const cameraSpeedZ = 0.0
 
   // Update URL when controls change
   useEffect(() => {
@@ -59,13 +61,13 @@ function CameraAnimation({ orbitControlsRef }) {
 
       // Update angles based on speed
       theta += cameraControls.cameraSpeedX * delta
-      phi += cameraControls.cameraSpeedY * delta
+      phi += cameraSpeedY * delta
 
       // Clamp phi to prevent flipping
       phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi))
 
       // Update radius (zoom)
-      const newRadius = Math.max(2, Math.min(20, radius + cameraControls.cameraSpeedZ * delta))
+      const newRadius = Math.max(2, Math.min(20, radius + cameraSpeedZ * delta))
 
       // Convert back to cartesian coordinates
       offset.x = newRadius * Math.sin(phi) * Math.sin(theta)
