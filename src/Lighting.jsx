@@ -1,8 +1,10 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useControls } from 'leva'
 import { Environment } from '@react-three/drei'
 
 function Lighting() {
+  const ambientRef = useRef(null)
+  const directionalRef = useRef(null)
   // Read initial values from URL params
   const getInitialValues = () => {
     const params = new URLSearchParams(window.location.search)
@@ -62,6 +64,15 @@ function Lighting() {
     window.history.replaceState({}, '', newUrl)
   }, [lightingControls])
 
+  useEffect(() => {
+    if (ambientRef.current) {
+      ambientRef.current.layers.enable(1)
+    }
+    if (directionalRef.current) {
+      directionalRef.current.layers.enable(1)
+    }
+  }, [lightingControls.ambientLightEnabled, lightingControls.directionalLightEnabled])
+
   return (
     <>
       {lightingControls.environmentEnabled && (
@@ -71,10 +82,11 @@ function Lighting() {
         />
       )}
       {lightingControls.ambientLightEnabled && (
-        <ambientLight intensity={lightingControls.ambientIntensity} />
+        <ambientLight ref={ambientRef} intensity={lightingControls.ambientIntensity} />
       )}
       {lightingControls.directionalLightEnabled && (
         <directionalLight
+          ref={directionalRef}
           position={[5, 5, 5]}
           intensity={lightingControls.directionalIntensity}
           castShadow

@@ -213,6 +213,12 @@ function HydraSphere({ hydraCode, onError }) {
     setMaterialKey(k => k + 1)
   }, [controls.preset, controls.fragmentPreset])
 
+  useEffect(() => {
+    if (meshRef.current) {
+      meshRef.current.layers.set(1)
+    }
+  }, [])
+
   useFrame((state) => {
     // Update Hydra texture
     if (textureRef.current) {

@@ -152,7 +152,7 @@ function HydraApp() {
       <div style={canvasStyle}>
         <Canvas
           camera={{ position: cameraPosition, fov: 50 }}
-          style={{ position: 'absolute', inset: 0, opacity: 0 }}
+          style={{ position: 'absolute', inset: 0 }}
         >
           <CameraAnimation orbitControlsRef={orbitControlsRef} />
           <HydraSphere hydraCode={hydraCode} onError={setHydraError} />
