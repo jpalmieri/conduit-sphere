@@ -59,3 +59,5 @@ export const hydraPresets = {
 }
 
 export const defaultCode = hydraPresets.oscillator.code
+
+export const defaultPostFxCode = `src(s0).out()`

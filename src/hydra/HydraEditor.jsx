@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { hydraPresets, defaultCode } from './hydraPresets'
+import { hydraPresets } from './hydraPresets'
 
-function HydraEditor({ code, onChange, onRun, error, isMobile }) {
+function HydraEditor({ code, onChange, onRun, error, isMobile, title = 'Hydra Editor', anchor = 'left' }) {
   const [isCollapsed, setIsCollapsed] = useState(isMobile)
   const textareaRef = useRef(null)
 
@@ -35,6 +35,8 @@ function HydraEditor({ code, onChange, onRun, error, isMobile }) {
     }
   }
 
+  const anchorStyle = anchor === 'right' ? { right: 20 } : { left: 20 }
+
   if (isCollapsed) {
     return (
       <button
@@ -42,7 +44,7 @@ function HydraEditor({ code, onChange, onRun, error, isMobile }) {
         style={{
           position: 'fixed',
           bottom: 20,
-          left: 20,
+          ...anchorStyle,
           zIndex: 10000,
           backgroundColor: 'rgba(30, 30, 30, 0.95)',
           color: '#fff',
@@ -64,7 +66,7 @@ function HydraEditor({ code, onChange, onRun, error, isMobile }) {
       style={{
         position: 'fixed',
         bottom: 20,
-        left: 20,
+        ...anchorStyle,
         width: isMobile ? 'calc(100vw - 40px)' : 380,
         maxHeight: isMobile ? '60vh' : '70vh',
         backgroundColor: 'rgba(30, 30, 30, 0.95)',
@@ -80,7 +82,7 @@ function HydraEditor({ code, onChange, onRun, error, isMobile }) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ color: '#fff', fontFamily: 'monospace', fontSize: 14, fontWeight: 600 }}>
-          Hydra Editor
+          {title}
         </span>
         <button
           onClick={() => setIsCollapsed(true)}

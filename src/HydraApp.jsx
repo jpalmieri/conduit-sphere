@@ -4,7 +4,8 @@ import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Bloom, Vignette } from '@react-three/postprocessing'
 import HydraSphere from './hydra/HydraSphere'
 import HydraEditor from './hydra/HydraEditor'
-import { defaultCode } from './hydra/hydraPresets'
+import HydraPostFX from './hydra/HydraPostFX'
+import { defaultCode, defaultPostFxCode } from './hydra/hydraPresets'
 import Lighting from './Lighting'
 import CameraAnimation from './CameraAnimation'
 import ControlsDrawer from './ControlsDrawer'
@@ -79,6 +80,7 @@ function CameraAdjuster({ isDrawerOpen, isMobile, orbitControlsRef }) {
 
 function HydraApp() {
   const orbitControlsRef = useRef()
+  const postFxMountRef = useRef(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isViewAdjusted, setIsViewAdjusted] = useState(false)
   const [isZoomAdjusted, setIsZoomAdjusted] = useState(false)
@@ -87,6 +89,8 @@ function HydraApp() {
   // Hydra state
   const [hydraCode, setHydraCode] = useState(defaultCode)
   const [hydraError, setHydraError] = useState(null)
+  const [postFxCode, setPostFxCode] = useState(defaultPostFxCode)
+  const [postFxError, setPostFxError] = useState(null)
 
   const hideMenu = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
@@ -122,10 +126,16 @@ function HydraApp() {
     setHydraCode(code => code)
   }
 
+  const handleRunPostFx = () => {
+    setPostFxCode(code => code)
+  }
+
   const canvasStyle = {
     width: '100vw',
     height: isMobile && isViewAdjusted ? '40vh' : '100vh',
-    transition: 'height 0.3s ease'
+    transition: 'height 0.3s ease',
+    position: 'relative',
+    overflow: 'hidden'
   }
 
   const cameraPosition = isMobile ? [0, 0, 8] : [0, 0, 5]
@@ -140,7 +150,10 @@ function HydraApp() {
         `}</style>
       )}
       <div style={canvasStyle}>
-        <Canvas camera={{ position: cameraPosition, fov: 50 }}>
+        <Canvas
+          camera={{ position: cameraPosition, fov: 50 }}
+          style={{ position: 'absolute', inset: 0, opacity: 0 }}
+        >
           <CameraAnimation orbitControlsRef={orbitControlsRef} />
           <HydraSphere hydraCode={hydraCode} onError={setHydraError} />
           <Lighting />
@@ -155,7 +168,12 @@ function HydraApp() {
             <Bloom luminanceThreshold={0.7} luminanceSmoothing={0.9} height={300} intensity={1.0} />
             <Vignette eskil={false} offset={0.1} darkness={0.5} />
           </EffectComposer>
+          <HydraPostFX mountRef={postFxMountRef} code={postFxCode} onError={setPostFxError} />
         </Canvas>
+        <div
+          ref={postFxMountRef}
+          style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}
+        />
       </div>
 
       {/* Hydra Code Editor */}
@@ -164,6 +182,16 @@ function HydraApp() {
         onChange={setHydraCode}
         onRun={handleRunCode}
         error={hydraError}
+        isMobile={isMobile}
+      />
+
+      <HydraEditor
+        title="Hydra Post FX"
+        anchor="right"
+        code={postFxCode}
+        onChange={setPostFxCode}
+        onRun={handleRunPostFx}
+        error={postFxError}
         isMobile={isMobile}
       />
 
