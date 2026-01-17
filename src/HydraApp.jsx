@@ -3,7 +3,6 @@ import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Bloom, Vignette } from '@react-three/postprocessing'
 import HydraSphere from './hydra/HydraSphere'
-import HydraEditor from './hydra/HydraEditor'
 import HydraPostFX from './hydra/HydraPostFX'
 import AudioDeviceSelector from './hydra/AudioDeviceSelector'
 import CodeOverlay from './hydra/CodeOverlay'
@@ -178,12 +177,16 @@ function HydraApp() {
           style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}
         />
 
-        {/* Code overlay for postFX - Hydra style */}
+        {/* Code overlay - Hydra style */}
         <CodeOverlay
-          code={postFxCode}
-          onChange={setPostFxCode}
-          onRun={handleRunPostFx}
-          error={postFxError}
+          postFxCode={postFxCode}
+          onPostFxChange={setPostFxCode}
+          onPostFxRun={handleRunPostFx}
+          postFxError={postFxError}
+          displacementCode={hydraCode}
+          onDisplacementChange={setHydraCode}
+          onDisplacementRun={handleRunCode}
+          displacementError={hydraError}
         />
 
         {/* Audio device selector - top right */}
@@ -194,15 +197,6 @@ function HydraApp() {
           />
         </div>
       </div>
-
-      {/* Hydra Code Editor - left side for sphere texture */}
-      <HydraEditor
-        code={hydraCode}
-        onChange={setHydraCode}
-        onRun={handleRunCode}
-        error={hydraError}
-        isMobile={isMobile}
-      />
 
       {!hideMenu && <ControlsDrawer isOpen={isDrawerOpen} onToggle={handleDrawerToggle} isMobile={isMobile} />}
     </>

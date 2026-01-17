@@ -47,43 +47,61 @@ const hydraTheme = EditorView.theme({
   },
 })
 
-function CodeOverlay({ code, onChange, onRun, error }) {
-  const editorRef = useRef(null)
-  const viewRef = useRef(null)
+// modes: 'postfx' | 'displacement'
+function CodeOverlay({
+  postFxCode,
+  onPostFxChange,
+  onPostFxRun,
+  postFxError,
+  displacementCode,
+  onDisplacementChange,
+  onDisplacementRun,
+  displacementError,
+}) {
+  const postFxEditorRef = useRef(null)
+  const displacementEditorRef = useRef(null)
+  const postFxViewRef = useRef(null)
+  const displacementViewRef = useRef(null)
   const [isVisible, setIsVisible] = useState(true)
+  const [mode, setMode] = useState('postfx') // 'postfx' | 'displacement'
 
-  // Toggle visibility with Ctrl+Shift+H
+  // Toggle visibility with Ctrl+Shift+H, toggle mode with Ctrl+Shift+E
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'h') {
         e.preventDefault()
         setIsVisible(v => !v)
       }
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'e') {
+        e.preventDefault()
+        setMode(m => m === 'postfx' ? 'displacement' : 'postfx')
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  // Create PostFX editor
   useEffect(() => {
-    if (!editorRef.current) return
+    if (!postFxEditorRef.current || postFxViewRef.current) return
 
     const runKeymap = keymap.of([{
       key: 'Ctrl-Enter',
       mac: 'Cmd-Enter',
       run: () => {
-        onRun()
+        onPostFxRun()
         return true
       }
     }])
 
     const updateListener = EditorView.updateListener.of((update) => {
       if (update.docChanged) {
-        onChange(update.state.doc.toString())
+        onPostFxChange(update.state.doc.toString())
       }
     })
 
     const state = EditorState.create({
-      doc: code,
+      doc: postFxCode,
       extensions: [
         javascript(),
         hydraTheme,
@@ -94,46 +112,107 @@ function CodeOverlay({ code, onChange, onRun, error }) {
       ],
     })
 
-    const view = new EditorView({
+    postFxViewRef.current = new EditorView({
       state,
-      parent: editorRef.current,
+      parent: postFxEditorRef.current,
     })
 
-    viewRef.current = view
-
     return () => {
-      view.destroy()
+      postFxViewRef.current?.destroy()
+      postFxViewRef.current = null
     }
   }, [])
 
-  // Update editor content when code prop changes externally
+  // Create Displacement editor
   useEffect(() => {
-    if (viewRef.current) {
-      const currentContent = viewRef.current.state.doc.toString()
-      if (currentContent !== code) {
-        viewRef.current.dispatch({
-          changes: {
-            from: 0,
-            to: currentContent.length,
-            insert: code,
-          },
+    if (!displacementEditorRef.current || displacementViewRef.current) return
+
+    const runKeymap = keymap.of([{
+      key: 'Ctrl-Enter',
+      mac: 'Cmd-Enter',
+      run: () => {
+        onDisplacementRun()
+        return true
+      }
+    }])
+
+    const updateListener = EditorView.updateListener.of((update) => {
+      if (update.docChanged) {
+        onDisplacementChange(update.state.doc.toString())
+      }
+    })
+
+    const state = EditorState.create({
+      doc: displacementCode,
+      extensions: [
+        javascript(),
+        hydraTheme,
+        oneDark,
+        runKeymap,
+        updateListener,
+        EditorView.lineWrapping,
+      ],
+    })
+
+    displacementViewRef.current = new EditorView({
+      state,
+      parent: displacementEditorRef.current,
+    })
+
+    return () => {
+      displacementViewRef.current?.destroy()
+      displacementViewRef.current = null
+    }
+  }, [])
+
+  // Update postfx editor content when code prop changes externally
+  useEffect(() => {
+    if (postFxViewRef.current) {
+      const currentContent = postFxViewRef.current.state.doc.toString()
+      if (currentContent !== postFxCode) {
+        postFxViewRef.current.dispatch({
+          changes: { from: 0, to: currentContent.length, insert: postFxCode },
         })
       }
     }
-  }, [code])
+  }, [postFxCode])
+
+  // Update displacement editor content when code prop changes externally
+  useEffect(() => {
+    if (displacementViewRef.current) {
+      const currentContent = displacementViewRef.current.state.doc.toString()
+      if (currentContent !== displacementCode) {
+        displacementViewRef.current.dispatch({
+          changes: { from: 0, to: currentContent.length, insert: displacementCode },
+        })
+      }
+    }
+  }, [displacementCode])
 
   const handlePresetChange = (e) => {
     const presetKey = e.target.value
     if (presetKey && hydraPresets[presetKey]) {
-      onChange(hydraPresets[presetKey].code)
+      if (mode === 'postfx') {
+        onPostFxChange(hydraPresets[presetKey].code)
+      } else {
+        onDisplacementChange(hydraPresets[presetKey].code)
+      }
     }
     e.target.value = ''
   }
 
-  // Filter to show only postFX-relevant presets
-  const postFxPresets = Object.entries(hydraPresets).filter(([key]) =>
-    key.startsWith('audio') || key === 'feedback'
-  )
+  // Filter presets based on mode
+  const getPresets = () => {
+    if (mode === 'postfx') {
+      return Object.entries(hydraPresets).filter(([key]) =>
+        key.startsWith('audio') || key === 'feedback'
+      )
+    } else {
+      return Object.entries(hydraPresets)
+    }
+  }
+
+  const currentError = mode === 'postfx' ? postFxError : displacementError
 
   return (
     <div
@@ -148,16 +227,69 @@ function CodeOverlay({ code, onChange, onRun, error }) {
         flexDirection: 'column',
       }}
     >
+      {/* Mode indicator / toggle */}
       <div
-        ref={editorRef}
+        style={{
+          marginBottom: 8,
+          display: 'flex',
+          gap: 8,
+        }}
+      >
+        <button
+          onClick={() => setMode('postfx')}
+          style={{
+            backgroundColor: mode === 'postfx' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.6)',
+            color: '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: 4,
+            padding: '4px 12px',
+            fontSize: 12,
+            cursor: 'pointer',
+            fontFamily: 'system-ui, sans-serif',
+          }}
+        >
+          postfx
+        </button>
+        <button
+          onClick={() => setMode('displacement')}
+          style={{
+            backgroundColor: mode === 'displacement' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.6)',
+            color: '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: 4,
+            padding: '4px 12px',
+            fontSize: 12,
+            cursor: 'pointer',
+            fontFamily: 'system-ui, sans-serif',
+          }}
+        >
+          displacement
+        </button>
+      </div>
+
+      {/* PostFX Editor */}
+      <div
+        ref={postFxEditorRef}
         style={{
           minHeight: 30,
           maxHeight: 'calc(100vh - 200px)',
           overflowY: 'auto',
+          display: mode === 'postfx' ? 'block' : 'none',
         }}
       />
 
-      {error && (
+      {/* Displacement Editor */}
+      <div
+        ref={displacementEditorRef}
+        style={{
+          minHeight: 30,
+          maxHeight: 'calc(100vh - 200px)',
+          overflowY: 'auto',
+          display: mode === 'displacement' ? 'block' : 'none',
+        }}
+      />
+
+      {currentError && (
         <div
           style={{
             marginTop: 8,
@@ -169,7 +301,7 @@ function CodeOverlay({ code, onChange, onRun, error }) {
             borderRadius: 4,
           }}
         >
-          {error.message || String(error)}
+          {currentError.message || String(currentError)}
         </div>
       )}
 
@@ -196,7 +328,7 @@ function CodeOverlay({ code, onChange, onRun, error }) {
           }}
         >
           <option value="" disabled>Load preset...</option>
-          {postFxPresets.map(([key, preset]) => (
+          {getPresets().map(([key, preset]) => (
             <option key={key} value={key}>{preset.name}</option>
           ))}
         </select>
@@ -208,7 +340,7 @@ function CodeOverlay({ code, onChange, onRun, error }) {
             textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)',
           }}
         >
-          ctrl+enter to run
+          ctrl+enter: run | ctrl+shift+e: switch | ctrl+shift+h: hide
         </span>
       </div>
     </div>
