@@ -12,6 +12,11 @@ const hydraTheme = EditorView.theme({
     backgroundColor: 'transparent',
     fontSize: '16px',
     fontFamily: '"Fira Code", "SF Mono", Monaco, Consolas, monospace',
+    border: 'none',
+    outline: 'none',
+  },
+  '&.cm-focused': {
+    outline: 'none',
   },
   '.cm-content': {
     caretColor: '#fff',
