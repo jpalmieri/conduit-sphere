@@ -6,6 +6,7 @@ import HydraSphere from './hydra/HydraSphere'
 import HydraEditor from './hydra/HydraEditor'
 import HydraPostFX from './hydra/HydraPostFX'
 import AudioDeviceSelector from './hydra/AudioDeviceSelector'
+import CodeOverlay from './hydra/CodeOverlay'
 import { defaultCode, defaultPostFxCode } from './hydra/hydraPresets'
 import Lighting from './Lighting'
 import CameraAnimation from './CameraAnimation'
@@ -176,31 +177,31 @@ function HydraApp() {
           ref={postFxMountRef}
           style={{ position: 'absolute', inset: 0, zIndex: 1, pointerEvents: 'none' }}
         />
+
+        {/* Code overlay for postFX - Hydra style */}
+        <CodeOverlay
+          code={postFxCode}
+          onChange={setPostFxCode}
+          onRun={handleRunPostFx}
+          error={postFxError}
+        />
+
+        {/* Audio device selector - top right */}
+        <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 100, width: 250 }}>
+          <AudioDeviceSelector
+            selectedDeviceId={audioDeviceId}
+            onDeviceSelect={setAudioDeviceId}
+          />
+        </div>
       </div>
 
-      {/* Hydra Code Editor */}
+      {/* Hydra Code Editor - left side for sphere texture */}
       <HydraEditor
         code={hydraCode}
         onChange={setHydraCode}
         onRun={handleRunCode}
         error={hydraError}
         isMobile={isMobile}
-      />
-
-      <HydraEditor
-        title="Hydra Post FX"
-        anchor="right"
-        code={postFxCode}
-        onChange={setPostFxCode}
-        onRun={handleRunPostFx}
-        error={postFxError}
-        isMobile={isMobile}
-        extraControls={
-          <AudioDeviceSelector
-            selectedDeviceId={audioDeviceId}
-            onDeviceSelect={setAudioDeviceId}
-          />
-        }
       />
 
       {!hideMenu && <ControlsDrawer isOpen={isDrawerOpen} onToggle={handleDrawerToggle} isMobile={isMobile} />}
