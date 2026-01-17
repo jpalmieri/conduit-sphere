@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { hydraPresets } from './hydraPresets'
 
-function HydraEditor({ code, onChange, onRun, error, isMobile, title = 'Hydra Editor', anchor = 'left' }) {
+function HydraEditor({ code, onChange, onRun, error, isMobile, title = 'Hydra Editor', anchor = 'left', extraControls }) {
   const [isCollapsed, setIsCollapsed] = useState(isMobile)
   const textareaRef = useRef(null)
 
@@ -117,6 +117,8 @@ function HydraEditor({ code, onChange, onRun, error, isMobile, title = 'Hydra Ed
           <option key={key} value={key}>{preset.name}</option>
         ))}
       </select>
+
+      {extraControls}
 
       <textarea
         ref={textareaRef}

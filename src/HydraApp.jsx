@@ -5,6 +5,7 @@ import { EffectComposer, DepthOfField, Bloom, Vignette } from '@react-three/post
 import HydraSphere from './hydra/HydraSphere'
 import HydraEditor from './hydra/HydraEditor'
 import HydraPostFX from './hydra/HydraPostFX'
+import AudioDeviceSelector from './hydra/AudioDeviceSelector'
 import { defaultCode, defaultPostFxCode } from './hydra/hydraPresets'
 import Lighting from './Lighting'
 import CameraAnimation from './CameraAnimation'
@@ -91,6 +92,7 @@ function HydraApp() {
   const [hydraError, setHydraError] = useState(null)
   const [postFxCode, setPostFxCode] = useState(defaultPostFxCode)
   const [postFxError, setPostFxError] = useState(null)
+  const [audioDeviceId, setAudioDeviceId] = useState(null)
 
   const hideMenu = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
@@ -168,7 +170,7 @@ function HydraApp() {
             <Bloom luminanceThreshold={0.7} luminanceSmoothing={0.9} height={300} intensity={1.0} />
             <Vignette eskil={false} offset={0.1} darkness={0.5} />
           </EffectComposer>
-          <HydraPostFX mountRef={postFxMountRef} code={postFxCode} onError={setPostFxError} />
+          <HydraPostFX mountRef={postFxMountRef} code={postFxCode} onError={setPostFxError} audioDeviceId={audioDeviceId} />
         </Canvas>
         <div
           ref={postFxMountRef}
@@ -193,6 +195,12 @@ function HydraApp() {
         onRun={handleRunPostFx}
         error={postFxError}
         isMobile={isMobile}
+        extraControls={
+          <AudioDeviceSelector
+            selectedDeviceId={audioDeviceId}
+            onDeviceSelect={setAudioDeviceId}
+          />
+        }
       />
 
       {!hideMenu && <ControlsDrawer isOpen={isDrawerOpen} onToggle={handleDrawerToggle} isMobile={isMobile} />}

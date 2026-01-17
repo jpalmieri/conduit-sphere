@@ -3,7 +3,7 @@ import Hydra from 'hydra-synth'
 export function createHydraInstance(canvas, options = {}) {
   const hydra = new Hydra({
     canvas,
-    detectAudio: false,
+    detectAudio: options.detectAudio || false,
     enableStreamCapture: false,
     makeGlobal: false,
     width: options.width || 512,

@@ -55,6 +55,27 @@ export const hydraPresets = {
   tiledVoronoi: {
     name: '[Sphere] Tiled Voronoi',
     code: `voronoi(8, 0.3, 0.3).tile(2, 1).out()`
+  },
+  // Audio-reactive presets (require microphone permission)
+  audioPulse: {
+    name: '[Audio] Pulse',
+    code: `src(s0).scale(() => 1 + a.fft[0] * 0.5).saturate(() => 1 + a.fft[1] * 2).out()`
+  },
+  audioKaleid: {
+    name: '[Audio] Kaleidoscope',
+    code: `src(s0).kaleid(() => 2 + Math.floor(a.fft[0] * 8)).rotate(() => a.fft[1] * 0.5).out()`
+  },
+  audioGlitch: {
+    name: '[Audio] Glitch',
+    code: `src(s0).modulate(noise(() => a.fft[0] * 20), () => a.fft[1] * 0.3).pixelate(() => 20 + a.fft[2] * 200, () => 20 + a.fft[2] * 200).out()`
+  },
+  audioColor: {
+    name: '[Audio] Color Shift',
+    code: `src(s0).hue(() => a.fft[0] * 0.5).saturate(() => 1 + a.fft[1] * 3).contrast(() => 1 + a.fft[2] * 0.5).out()`
+  },
+  audioFeedback: {
+    name: '[Audio] Feedback',
+    code: `src(o0).scale(() => 1.01 + a.fft[0] * 0.02).rotate(() => a.fft[1] * 0.02).blend(src(s0), 0.9).out()`
   }
 }
 

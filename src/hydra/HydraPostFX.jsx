@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { createHydraInstance, executeHydraCode } from './HydraManager'
+import { initializeAudio, cleanupAudio } from './AudioManager'
 
-function HydraPostFX({ mountRef, code, onError }) {
+function HydraPostFX({ mountRef, code, onError, audioDeviceId }) {
   const { gl, size, scene, camera } = useThree()
   const hydraRef = useRef(null)
   const canvasRef = useRef(null)
@@ -43,7 +44,12 @@ function HydraPostFX({ mountRef, code, onError }) {
     hydraRef.current = createHydraInstance(outputCanvas, {
       width: size.width,
       height: size.height,
+      detectAudio: false, // We handle audio manually
     })
+
+    // Initialize audio fft array so presets don't error before device is selected
+    hydraRef.current.synth.a = hydraRef.current.synth.a || {}
+    hydraRef.current.synth.a.fft = [0, 0, 0, 0]
 
     // Feed the sphere-only render into Hydra
     hydraRef.current.synth.s0.init({ src: captureCanvas })
@@ -54,6 +60,7 @@ function HydraPostFX({ mountRef, code, onError }) {
     }
 
     return () => {
+      cleanupAudio()
       try {
         hydraRef.current?.synth?.hush()
       } catch {
@@ -71,6 +78,18 @@ function HydraPostFX({ mountRef, code, onError }) {
       captureCanvasRef.current = null
     }
   }, [mountRef, gl, size.width, size.height])
+
+  // Initialize audio when device changes
+  useEffect(() => {
+    if (!hydraRef.current || !audioDeviceId) return
+
+    initializeAudio(audioDeviceId, hydraRef.current.synth.a)
+      .then(result => {
+        if (!result.success) {
+          console.error('Failed to initialize audio:', result.error)
+        }
+      })
+  }, [audioDeviceId])
 
   useFrame(() => {
     const renderer = captureRendererRef.current
