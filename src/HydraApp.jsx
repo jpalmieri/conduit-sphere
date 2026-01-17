@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useMemo } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Bloom, Vignette } from '@react-three/postprocessing'
@@ -92,11 +92,10 @@ function HydraApp() {
   const [postFxCode, setPostFxCode] = useState(defaultPostFxCode)
   const [postFxError, setPostFxError] = useState(null)
   const [audioDeviceId, setAudioDeviceId] = useState(null)
-
-  const hideMenu = useMemo(() => {
+  const [settingsHidden, setSettingsHidden] = useState(() => {
     const params = new URLSearchParams(window.location.search)
     return params.has('hideMenu')
-  }, [])
+  })
 
   useEffect(() => {
     const checkMobile = () => {
@@ -121,6 +120,29 @@ function HydraApp() {
     }
   }
 
+  // Toggle 3D settings with Ctrl+Shift+P and update URL
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.shiftKey && e.code === 'KeyP') {
+        e.preventDefault()
+        e.stopPropagation()
+        setSettingsHidden(prev => {
+          const newValue = !prev
+          const url = new URL(window.location.href)
+          if (newValue) {
+            url.searchParams.set('hideMenu', '')
+          } else {
+            url.searchParams.delete('hideMenu')
+          }
+          window.history.replaceState({}, '', url)
+          return newValue
+        })
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
+  }, [])
+
   const handleRunCode = () => {
     // The code execution happens in HydraSphere via useEffect when hydraCode changes
     // Force a re-render by setting the same code (or we can use a key)
@@ -143,7 +165,7 @@ function HydraApp() {
 
   return (
     <>
-      {hideMenu && (
+      {settingsHidden && (
         <style>{`
           .leva-c-kWgxhW {
             display: none !important;
@@ -191,7 +213,7 @@ function HydraApp() {
         />
       </div>
 
-      {!hideMenu && <ControlsDrawer isOpen={isDrawerOpen} onToggle={handleDrawerToggle} isMobile={isMobile} />}
+      {!settingsHidden && <ControlsDrawer isOpen={isDrawerOpen} onToggle={handleDrawerToggle} isMobile={isMobile} />}
     </>
   )
 }
