@@ -4,6 +4,7 @@ import { EditorState } from '@codemirror/state'
 import { javascript } from '@codemirror/lang-javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
 import { hydraPresets } from './hydraPresets'
+import { getAudioDevices } from './AudioManager'
 
 // Custom Hydra-style theme with transparent background and per-line highlighting
 const hydraTheme = EditorView.theme({
@@ -57,6 +58,8 @@ function CodeOverlay({
   onDisplacementChange,
   onDisplacementRun,
   displacementError,
+  audioDeviceId,
+  onAudioDeviceChange,
 }) {
   const postFxEditorRef = useRef(null)
   const displacementEditorRef = useRef(null)
@@ -64,6 +67,18 @@ function CodeOverlay({
   const displacementViewRef = useRef(null)
   const [isVisible, setIsVisible] = useState(true)
   const [mode, setMode] = useState('postfx') // 'postfx' | 'displacement'
+  const [audioDevices, setAudioDevices] = useState([])
+
+  // Auto-request audio permission and load devices on mount
+  useEffect(() => {
+    getAudioDevices().then(devices => {
+      setAudioDevices(devices)
+      // Auto-select first device if none selected
+      if (devices.length > 0 && !audioDeviceId) {
+        onAudioDeviceChange(devices[0].deviceId)
+      }
+    })
+  }, [])
 
   // Toggle visibility with Ctrl+Shift+H, toggle mode with Ctrl+Shift+E
   useEffect(() => {
@@ -227,12 +242,14 @@ function CodeOverlay({
         flexDirection: 'column',
       }}
     >
-      {/* Mode indicator / toggle */}
+      {/* Mode indicator / toggle + audio device */}
       <div
         style={{
           marginBottom: 8,
           display: 'flex',
           gap: 8,
+          alignItems: 'center',
+          flexWrap: 'wrap',
         }}
       >
         <button
@@ -265,6 +282,31 @@ function CodeOverlay({
         >
           displacement
         </button>
+
+        {audioDevices.length > 0 && (
+          <select
+            value={audioDeviceId || ''}
+            onChange={(e) => onAudioDeviceChange(e.target.value || null)}
+            style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              color: '#fff',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: 4,
+              padding: '4px 8px',
+              fontSize: 12,
+              cursor: 'pointer',
+              fontFamily: 'system-ui, sans-serif',
+              maxWidth: 200,
+            }}
+          >
+            <option value="">No audio</option>
+            {audioDevices.map(device => (
+              <option key={device.deviceId} value={device.deviceId}>
+                {device.label}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       {/* PostFX Editor */}

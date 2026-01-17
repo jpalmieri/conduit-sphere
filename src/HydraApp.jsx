@@ -4,7 +4,6 @@ import { OrbitControls } from '@react-three/drei'
 import { EffectComposer, DepthOfField, Bloom, Vignette } from '@react-three/postprocessing'
 import HydraSphere from './hydra/HydraSphere'
 import HydraPostFX from './hydra/HydraPostFX'
-import AudioDeviceSelector from './hydra/AudioDeviceSelector'
 import CodeOverlay from './hydra/CodeOverlay'
 import { defaultCode, defaultPostFxCode } from './hydra/hydraPresets'
 import Lighting from './Lighting'
@@ -187,15 +186,9 @@ function HydraApp() {
           onDisplacementChange={setHydraCode}
           onDisplacementRun={handleRunCode}
           displacementError={hydraError}
+          audioDeviceId={audioDeviceId}
+          onAudioDeviceChange={setAudioDeviceId}
         />
-
-        {/* Audio device selector - top right */}
-        <div style={{ position: 'absolute', top: 20, right: 20, zIndex: 100, width: 250 }}>
-          <AudioDeviceSelector
-            selectedDeviceId={audioDeviceId}
-            onDeviceSelect={setAudioDeviceId}
-          />
-        </div>
       </div>
 
       {!hideMenu && <ControlsDrawer isOpen={isDrawerOpen} onToggle={handleDrawerToggle} isMobile={isMobile} />}
